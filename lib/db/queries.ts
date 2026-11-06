@@ -3,6 +3,7 @@ import "server-only";
 import {
   and,
   asc,
+  avg,
   count,
   countDistinct,
   desc,
@@ -12,6 +13,7 @@ import {
   inArray,
   isNotNull,
   like,
+  max,
   or,
   sql,
   type SQL,
@@ -503,6 +505,184 @@ export async function getCollegeProfile(
       seats2025: seats.reduce((sum, row) => sum + row.totalSeats, 0),
       allotted2025: seats.reduce((sum, row) => sum + (row.allotted ?? 0), 0),
       vacant2025: seats.reduce((sum, row) => sum + (row.vacant ?? 0), 0),
+    },
+  };
+}
+
+export type CutoffExplorerRow = {
+  collegeBranchId: number;
+  collegeCode: string;
+  collegeName: string;
+  collegeShortName: string | null;
+  district: string | null;
+  type: string;
+  branchCode: string;
+  branchName: string;
+  mark: number | null;
+  rank: number | null;
+  history: (number | null)[];
+};
+
+export type CutoffExplorerResult = {
+  rows: CutoffExplorerRow[];
+  total: number;
+  page: number;
+  pages: number;
+  summary: {
+    highest: number | null;
+    average: number | null;
+    programmes: number;
+  };
+};
+
+export type CutoffExplorerParams = {
+  year: number;
+  community: Community;
+  branch?: string;
+  district?: string;
+  q?: string;
+  page?: number;
+  limit?: number;
+};
+
+/**
+ * Browse one year/community's closing marks, sorted high to low. Each row
+ * carries that programme's six-year mark history for the same community.
+ */
+export async function getCutoffExplorer(
+  params: CutoffExplorerParams,
+): Promise<CutoffExplorerResult> {
+  const page = Math.max(1, Math.floor(params.page ?? 1));
+  const limit = Math.min(Math.max(Math.floor(params.limit ?? 25), 1), 100);
+  const offset = (page - 1) * limit;
+
+  const conditions: SQL[] = [
+    eq(cutoffs.year, params.year),
+    eq(cutoffs.community, params.community),
+    isNotNull(cutoffs.cutoffMark),
+  ];
+
+  if (params.branch) {
+    conditions.push(eq(collegeBranches.branchCode, params.branch));
+  }
+  if (params.district) {
+    conditions.push(eq(colleges.district, params.district));
+  }
+  if (params.q?.trim()) {
+    const pattern = `%${params.q.trim()}%`;
+    conditions.push(
+      or(
+        like(colleges.name, pattern),
+        like(colleges.shortName, pattern),
+        like(colleges.code, `${params.q.trim()}%`),
+      )!,
+    );
+  }
+
+  const where = and(...conditions);
+
+  const rowsQuery = db
+    .select({
+      collegeBranchId: collegeBranches.id,
+      collegeCode: colleges.code,
+      collegeName: colleges.name,
+      collegeShortName: colleges.shortName,
+      district: colleges.district,
+      type: colleges.type,
+      branchCode: collegeBranches.branchCode,
+      branchName: collegeBranches.branchName,
+      mark: cutoffs.cutoffMark,
+      rank: cutoffs.generalRank,
+    })
+    .from(cutoffs)
+    .innerJoin(
+      collegeBranches,
+      eq(cutoffs.collegeBranchId, collegeBranches.id),
+    )
+    .innerJoin(colleges, eq(collegeBranches.collegeCode, colleges.code))
+    .where(where)
+    .orderBy(desc(cutoffs.cutoffMark), asc(colleges.name))
+    .limit(limit)
+    .offset(offset);
+
+  const summaryQuery = db
+    .select({
+      highest: max(cutoffs.cutoffMark),
+      average: avg(cutoffs.cutoffMark),
+      programmes: countDistinct(collegeBranches.id),
+    })
+    .from(cutoffs)
+    .innerJoin(
+      collegeBranches,
+      eq(cutoffs.collegeBranchId, collegeBranches.id),
+    )
+    .innerJoin(colleges, eq(collegeBranches.collegeCode, colleges.code))
+    .where(where);
+
+  const countQuery = db
+    .select({ value: count() })
+    .from(cutoffs)
+    .innerJoin(
+      collegeBranches,
+      eq(cutoffs.collegeBranchId, collegeBranches.id),
+    )
+    .innerJoin(colleges, eq(collegeBranches.collegeCode, colleges.code))
+    .where(where);
+
+  const [rows, summaryRows, totalRows] = await Promise.all([
+    rowsQuery,
+    summaryQuery,
+    countQuery,
+  ]);
+
+  const ids = rows.map((row) => row.collegeBranchId);
+  const historyRows =
+    ids.length > 0
+      ? await db
+          .select({
+            collegeBranchId: cutoffs.collegeBranchId,
+            year: cutoffs.year,
+            cutoffMark: cutoffs.cutoffMark,
+          })
+          .from(cutoffs)
+          .where(
+            and(
+              inArray(cutoffs.collegeBranchId, ids),
+              eq(cutoffs.community, params.community),
+              gte(cutoffs.year, 2020),
+            ),
+          )
+      : [];
+
+  const histories = new Map<number, (number | null)[]>();
+  for (const id of ids) histories.set(id, Array(6).fill(null));
+  for (const row of historyRows) {
+    const history = histories.get(row.collegeBranchId);
+    if (!history) continue;
+    const index = row.year - 2020;
+    if (index >= 0 && index < history.length) {
+      history[index] = row.cutoffMark;
+    }
+  }
+
+  const total = totalRows[0]?.value ?? 0;
+  const summary = summaryRows[0];
+
+  return {
+    rows: rows.map((row) => ({
+      ...row,
+      history: histories.get(row.collegeBranchId) ?? Array(6).fill(null),
+    })),
+    total,
+    page,
+    pages: Math.max(1, Math.ceil(total / limit)),
+    summary: {
+      highest: summary?.highest ?? null,
+      average:
+        summary?.average === null || summary?.average === undefined
+          ? null
+          : Number(summary.average),
+      programmes: summary?.programmes ?? 0,
     },
   };
 }
