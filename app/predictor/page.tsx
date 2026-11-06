@@ -12,6 +12,7 @@ import {
 
 import { PageHeader } from "@/components/page-header";
 import { PredictorForm } from "@/components/predictor-form";
+import { AddToChoice } from "@/components/add-to-choice";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -308,7 +309,7 @@ export default async function PredictorPage({
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[50rem] text-left text-[12px]">
+                  <table className="w-full min-w-[54rem] text-left text-[12px]">
                     <thead className="border-b border-border bg-surface/60 text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
                       <tr>
                         <th className="px-4 py-2.5 font-medium">College</th>
@@ -321,6 +322,9 @@ export default async function PredictorPage({
                         </th>
                         <th className="px-4 py-2.5 text-right font-medium">
                           Reading
+                        </th>
+                        <th className="px-4 py-2.5 text-right font-medium">
+                          List
                         </th>
                       </tr>
                     </thead>
@@ -392,6 +396,23 @@ export default async function PredictorPage({
                                 {row.prediction.label}
                               </Badge>
                             </span>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <AddToChoice
+                              iconOnly
+                              input={{
+                                id: row.collegeBranchId,
+                                collegeCode: row.collegeCode,
+                                collegeName: row.collegeName,
+                                collegeShortName: row.collegeShortName,
+                                district: row.district,
+                                type: row.type,
+                                branchCode: row.branchCode,
+                                branchName: row.branchName,
+                                cutoffMark: row.mark,
+                                rank: row.rank,
+                              }}
+                            />
                           </td>
                         </tr>
                       ))}

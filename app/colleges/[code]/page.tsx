@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
+import { AddToChoice } from "@/components/add-to-choice";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -201,7 +202,7 @@ export default async function CollegeProfilePage({
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[38rem] text-left text-[12px]">
+                <table className="w-full min-w-[42rem] text-left text-[12px]">
                   <thead className="border-b border-border bg-surface/60 text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
                     <tr>
                       <th className="px-5 py-2.5 font-medium">Branch</th>
@@ -214,8 +215,11 @@ export default async function CollegeProfilePage({
                       <th className="px-3 py-2.5 text-right font-medium">
                         Allotted
                       </th>
-                      <th className="px-5 py-2.5 text-right font-medium">
+                      <th className="px-3 py-2.5 text-right font-medium">
                         Vacant
+                      </th>
+                      <th className="px-5 py-2.5 text-right font-medium">
+                        List
                       </th>
                     </tr>
                   </thead>
@@ -248,8 +252,25 @@ export default async function CollegeProfilePage({
                         <td className="px-3 py-3 text-right font-mono text-muted-foreground">
                           {formatNumber(branch.seats?.allotted)}
                         </td>
-                        <td className="px-5 py-3 text-right font-mono text-muted-foreground">
+                        <td className="px-3 py-3 text-right font-mono text-muted-foreground">
                           {formatNumber(branch.seats?.vacant)}
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <AddToChoice
+                            iconOnly
+                            input={{
+                              id: branch.id,
+                              collegeCode: college.code,
+                              collegeName: college.name,
+                              collegeShortName: college.shortName,
+                              district: college.district,
+                              type: college.type,
+                              branchCode: branch.branchCode,
+                              branchName: branch.branchName,
+                              cutoffMark: branch.cutoffs2025.OC?.mark ?? null,
+                              rank: branch.cutoffs2025.OC?.rank ?? null,
+                            }}
+                          />
                         </td>
                       </tr>
                     ))}

@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { CommandPalette } from "@/components/command-palette";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ChoicesProvider } from "@/components/choices-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -77,21 +78,23 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <TooltipProvider delayDuration={200}>
-            <a
-              href="#main"
-              className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:shadow-lg"
-            >
-              Skip to content
-            </a>
-            <div className="flex min-h-screen flex-col">
-              <SiteHeader />
-              <main id="main" className="flex-1">
-                {children}
-              </main>
-              <SiteFooter />
-            </div>
-            <CommandPalette />
-            <Toaster position="top-center" richColors closeButton />
+            <ChoicesProvider>
+              <a
+                href="#main"
+                className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:shadow-lg"
+              >
+                Skip to content
+              </a>
+              <div className="flex min-h-screen flex-col">
+                <SiteHeader />
+                <main id="main" className="flex-1">
+                  {children}
+                </main>
+                <SiteFooter />
+              </div>
+              <CommandPalette />
+              <Toaster position="top-center" richColors closeButton />
+            </ChoicesProvider>
           </TooltipProvider>
         </ThemeProvider>
       </body>

@@ -14,6 +14,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { useChoices } from "@/components/choices-provider";
 
 const NAV = [
   { href: "/colleges", label: "Colleges" },
@@ -25,6 +26,7 @@ const NAV = [
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const { count } = useChoices();
   const [scrolled, setScrolled] = React.useState(false);
   const [menuOpen, setMenuOpen] = React.useState(false);
 
@@ -67,7 +69,14 @@ export function SiteHeader() {
                       : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                   )}
                 >
-                  {item.label}
+                  <span className="inline-flex items-center gap-1.5">
+                    {item.label}
+                    {item.href === "/choices" && count > 0 && (
+                      <span className="grid min-w-4 place-items-center rounded-full bg-primary/10 px-1 font-mono text-[10px] font-semibold text-primary">
+                        {count}
+                      </span>
+                    )}
+                  </span>
                 </Link>
               );
             })}
@@ -120,13 +129,20 @@ export function SiteHeader() {
                       key={item.href}
                       href={item.href}
                       className={cn(
-                        "rounded-lg px-3 py-2.5 text-[15px] font-medium",
+                        "flex items-center justify-between rounded-lg px-3 py-2.5 text-[15px] font-medium",
                         active
                           ? "bg-muted text-foreground"
                           : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                       )}
                     >
-                      {item.label}
+                      <span className="inline-flex items-center gap-1.5">
+                        {item.label}
+                        {item.href === "/choices" && count > 0 && (
+                          <span className="grid min-w-5 place-items-center rounded-full bg-primary/10 px-1.5 font-mono text-[10px] font-semibold text-primary">
+                            {count}
+                          </span>
+                        )}
+                      </span>
                     </Link>
                   );
                 })}
