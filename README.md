@@ -1,6 +1,6 @@
 # TNEA Compass
 
-An independent, data-first guide to Tamil Nadu engineering admissions. Search 447 colleges, read six years of published TNEA cutoffs, estimate your rank, and build a counselling choice list you can explain.
+An independent, data-first guide to Tamil Nadu engineering admissions. Search 450 colleges, read six years of published TNEA cutoffs, estimate your rank, and build a counselling choice list you can explain.
 
 > TNEA Compass is not affiliated with the Directorate of Technical Education, Tamil Nadu. Always verify decisions on [tneaonline.org](https://www.tneaonline.org).
 
@@ -21,6 +21,7 @@ Node 22 (see `.nvmrc`).
 nvm use
 npm install
 cp .env.example .env.local
+npm run db:migrate
 npm run db:seed
 npm run dev
 ```
@@ -35,19 +36,23 @@ npm run dev
 | `npm run typecheck` | TypeScript |
 | `npm run test` | Unit tests |
 | `npm run db:generate` | Generate migrations |
+| `npm run db:migrate` | Apply migrations to the local database |
 | `npm run db:seed` | Import the TNEA dataset |
-| `npm run data:etl` | Rebuild normalized seed files |
+| `npm run data:etl` | Rebuild normalized seed files from the original exports |
 
 ## Data
 
-Compiled from published TNEA counselling records, 2020–2025:
+Compiled from published TNEA counselling records:
 
-- 447 colleges and 3,234 college–branch combinations
-- 250,453 cutoff observations across 7 communities
+- 450 colleges and 3,756 college–branch programmes
+- 63,454 cutoff marks across seven communities, 2020–2025
+- 14,719 closing ranks for **2025 only**
 - 18,900 seat-allotment rows
-- Hostel, transport and partial fee records
+- Hostel availability and partial 2023 fee records
 
-Missing values are shown as **Not reported**. The project does not fabricate placements, NAAC grades or fees.
+The archived 2024 rank export is an exact duplicate of 2025, so closing ranks are
+shown for 2025 only. Missing values are shown as **Not reported**. The project
+does not fabricate placements, NAAC grades or fees.
 
 ## Status
 

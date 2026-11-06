@@ -1,0 +1,35 @@
+{
+  "generatedAt": "2026-11-06T12:53:05.455100+00:00",
+  "source": "Original TNEA imports: 2023 college/branch/hostel/fee/facility exports, 2020-2025 cutoff export, 2025 rank export, and the Information_about_colleges PDF text.",
+  "notes": [
+    "Closing ranks are stored for 2025 only. The archived 2024 per-year file is an exact duplicate of 2025, so its ranks are not used.",
+    "2020-2024 cutoff marks come from the all-years export after dropping rank-like values above 200 and keeping the highest mark per key.",
+    "The 2025 PERI (1452) AI and Machine Learning ranks are patched from the archived college page; the source reused the Artificial Intelligence programme's ranks.",
+    "Establishment fee is the reported hostel establishment charge, not tuition or a total annual hostel cost.",
+    "Missing values are null and are rendered as 'Not reported'."
+  ],
+  "counts": {
+    "colleges": 450,
+    "branches": 122,
+    "collegeBranches": 3756,
+    "cutoffs": 63454,
+    "seatMatrix": 18900,
+    "hostels": 444,
+    "fees": 444
+  },
+  "cutoffYears": {
+    "2020": 7314,
+    "2021": 8639,
+    "2022": 9900,
+    "2023": 11104,
+    "2024": 11778,
+    "2025": 14719
+  },
+  "collegeTypes": {
+    "Government": 11,
+    "Government Aided": 21,
+    "Self-Financing": 413,
+    "University Department": 5
+  },
+  "generalRanks": 14719
+}
