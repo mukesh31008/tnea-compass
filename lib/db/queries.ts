@@ -8,6 +8,8 @@ import {
   desc,
   eq,
   exists,
+  gte,
+  inArray,
   isNotNull,
   like,
   or,
@@ -25,7 +27,11 @@ import {
   fees,
   hostels,
   seatMatrix,
+  type College,
+  type Fee,
+  type Hostel,
 } from "@/lib/db/schema";
+import { type Community } from "@/lib/tnea";
 
 export type YearCount = { year: number; count: number };
 export type TypeCount = { type: string; count: number };
@@ -346,5 +352,157 @@ export async function getCollege(code: string) {
     college,
     hostel: hostel ?? null,
     fees: fee ?? null,
+  };
+}
+
+export type CommunityCutoff = {
+  mark: number | null;
+  rank: number | null;
+};
+
+export type CollegeProfileBranch = {
+  id: number;
+  branchCode: string;
+  branchName: string;
+  approvedIntake: number | null;
+  yearStarted: number | null;
+  nba: boolean | null;
+  nbaValidUpto: number | null;
+  seats: {
+    totalSeats: number;
+    allotted: number | null;
+    vacant: number | null;
+  } | null;
+  cutoffs2025: Partial<Record<Community, CommunityCutoff>>;
+  ocHistory: Partial<Record<number, number | null>>;
+};
+
+export type CollegeProfile = {
+  college: College;
+  hostel: Hostel | null;
+  fees: Fee | null;
+  branches: CollegeProfileBranch[];
+  totals: {
+    branches: number;
+    seats2025: number;
+    allotted2025: number;
+    vacant2025: number;
+  };
+};
+
+/** A college profile with 2025 cutoffs, seats and OC mark history. */
+export async function getCollegeProfile(
+  code: string,
+): Promise<CollegeProfile | null> {
+  const collegeData = await getCollege(code);
+  if (!collegeData) return null;
+
+  const branchRows = await db
+    .select({
+      id: collegeBranches.id,
+      branchCode: collegeBranches.branchCode,
+      branchName: collegeBranches.branchName,
+      approvedIntake: collegeBranches.approvedIntake,
+      yearStarted: collegeBranches.yearStarted,
+      nba: collegeBranches.nba,
+      nbaValidUpto: collegeBranches.nbaValidUpto,
+      totalSeats: seatMatrix.totalSeats,
+      allotted: seatMatrix.allotted,
+      vacant: seatMatrix.vacant,
+    })
+    .from(collegeBranches)
+    .leftJoin(
+      seatMatrix,
+      and(
+        eq(seatMatrix.collegeBranchId, collegeBranches.id),
+        eq(seatMatrix.year, 2025),
+      ),
+    )
+    .where(eq(collegeBranches.collegeCode, code))
+    .orderBy(asc(collegeBranches.branchName), asc(collegeBranches.branchCode));
+
+  const ids = branchRows.map((row) => row.id);
+  const cutoffRows =
+    ids.length > 0
+      ? await db
+          .select({
+            collegeBranchId: cutoffs.collegeBranchId,
+            year: cutoffs.year,
+            community: cutoffs.community,
+            cutoffMark: cutoffs.cutoffMark,
+            generalRank: cutoffs.generalRank,
+          })
+          .from(cutoffs)
+          .where(
+            and(
+              inArray(cutoffs.collegeBranchId, ids),
+              gte(cutoffs.year, 2020),
+            ),
+          )
+      : [];
+
+  const byBranch = new Map<
+    number,
+    {
+      cutoffs2025: Partial<Record<Community, CommunityCutoff>>;
+      ocHistory: Partial<Record<number, number | null>>;
+    }
+  >();
+
+  for (const row of branchRows) {
+    byBranch.set(row.id, { cutoffs2025: {}, ocHistory: {} });
+  }
+
+  for (const row of cutoffRows) {
+    const entry = byBranch.get(row.collegeBranchId);
+    if (!entry) continue;
+
+    if (row.year === 2025) {
+      entry.cutoffs2025[row.community as Community] = {
+        mark: row.cutoffMark,
+        rank: row.generalRank,
+      };
+    }
+    if (row.community === "OC") {
+      entry.ocHistory[row.year] = row.cutoffMark;
+    }
+  }
+
+  const profileBranches: CollegeProfileBranch[] = branchRows.map((row) => {
+    const entry = byBranch.get(row.id);
+    return {
+      id: row.id,
+      branchCode: row.branchCode,
+      branchName: row.branchName,
+      approvedIntake: row.approvedIntake,
+      yearStarted: row.yearStarted,
+      nba: row.nba,
+      nbaValidUpto: row.nbaValidUpto,
+      seats:
+        row.totalSeats === null
+          ? null
+          : {
+              totalSeats: row.totalSeats,
+              allotted: row.allotted,
+              vacant: row.vacant,
+            },
+      cutoffs2025: entry?.cutoffs2025 ?? {},
+      ocHistory: entry?.ocHistory ?? {},
+    };
+  });
+
+  const seats = profileBranches
+    .map((branch) => branch.seats)
+    .filter((row): row is NonNullable<typeof row> => row !== null);
+
+  return {
+    ...collegeData,
+    branches: profileBranches,
+    totals: {
+      branches: profileBranches.length,
+      seats2025: seats.reduce((sum, row) => sum + row.totalSeats, 0),
+      allotted2025: seats.reduce((sum, row) => sum + (row.allotted ?? 0), 0),
+      vacant2025: seats.reduce((sum, row) => sum + (row.vacant ?? 0), 0),
+    },
   };
 }
