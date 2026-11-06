@@ -342,9 +342,14 @@ def parse_college_types(text_path: Path) -> dict[str, str]:
 
 
 def write_ndjson(path: Path, rows: list[dict[str, Any]]) -> None:
-    with gzip.open(path, "wt", encoding="utf-8") as handle:
-        for row in rows:
-            handle.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
+    payload = "".join(
+        json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n"
+        for row in rows
+    ).encode("utf-8")
+    with path.open("wb") as raw:
+        # mtime=0 keeps the committed seed files byte-for-byte reproducible.
+        with gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as handle:
+            handle.write(payload)
 
 
 def main() -> None:
@@ -789,6 +794,7 @@ def main() -> None:
         },
         "cutoffYears": dict(sorted(Counter(row["year"] for row in cutoffs_rows).items())),
         "collegeTypes": dict(sorted(Counter(row["type"] for row in colleges_rows).items())),
+        "districts": len({row["district"] for row in colleges_rows if row["district"]}),
         "generalRanks": sum(1 for row in cutoffs_rows if row["generalRank"] is not None),
     }
     with (out / "manifest.json").open("w", encoding="utf-8") as handle:

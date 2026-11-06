@@ -25,7 +25,7 @@ type SearchCollege = {
 };
 
 const QUICK_LINKS = [
-  { label: "College explorer", href: "/colleges", icon: Building2, hint: "447 institutions" },
+  { label: "College explorer", href: "/colleges", icon: Building2, hint: "450 institutions" },
   { label: "Cutoff trends", href: "/cutoffs", icon: BarChart3, hint: "2020 – 2025" },
   { label: "Check my chances", href: "/predictor", icon: Sparkles, hint: "Rank based" },
   { label: "Rank from cutoff", href: "/predictor?mode=rank", icon: Calculator, hint: "Estimate rank" },

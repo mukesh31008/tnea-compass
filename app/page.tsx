@@ -19,13 +19,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
+import {
+  getBranchOptions,
+  getDatasetStats,
+  getDistrictOptions,
+} from "@/lib/db/queries";
+import { formatNumber } from "@/lib/utils";
 
-const STATS = [
-  { value: "447", label: "Colleges", hint: "Across Tamil Nadu" },
-  { value: "2.5L", label: "Cutoff records", hint: "2020 – 2025" },
-  { value: "93", label: "Branches", hint: "B.E. and B.Tech" },
-  { value: "18.9K", label: "Seat rows", hint: "Allotment history" },
-];
+export const dynamic = "force-dynamic";
 
 const TOOLS = [
   {
@@ -33,7 +34,7 @@ const TOOLS = [
     icon: Building2,
     title: "College explorer",
     description:
-      "Filter 447 institutions by district, branch, accreditation, hostel and more.",
+      "Filter 450 institutions by district, branch, accreditation, hostel and more.",
   },
   {
     href: "/cutoffs",
@@ -81,7 +82,7 @@ const STEPS = [
   {
     n: "02",
     title: "Read the evidence",
-    body: "Every result shows the last three closing ranks it was compared against.",
+    body: "Every result shows the 2025 closing rank and earlier cutoff marks it was compared against.",
   },
   {
     n: "03",
@@ -90,7 +91,36 @@ const STEPS = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [stats, districts, branches] = await Promise.all([
+    getDatasetStats(),
+    getDistrictOptions().catch(() => []),
+    getBranchOptions().catch(() => []),
+  ]);
+
+  const statCards = [
+    {
+      value: formatNumber(stats.colleges),
+      label: "Colleges",
+      hint: `Across ${stats.districts || "Tamil Nadu"} districts`,
+    },
+    {
+      value: formatNumber(stats.cutoffs),
+      label: "Cutoff marks",
+      hint: "2020 – 2025",
+    },
+    {
+      value: formatNumber(stats.branches),
+      label: "Branches",
+      hint: `${formatNumber(stats.collegeBranches)} programmes`,
+    },
+    {
+      value: formatNumber(stats.seats),
+      label: "Seat rows",
+      hint: "Allotment history",
+    },
+  ];
+
   return (
     <>
       <section className="relative overflow-hidden border-b border-border">
@@ -170,7 +200,7 @@ export default function HomePage() {
                   <div>
                     <p className="text-sm font-semibold">Check your chances</p>
                     <p className="text-[11px] text-muted-foreground">
-                      Based on 2022–2025 closing ranks
+                      Based on 2025 closing ranks
                     </p>
                   </div>
                 </div>
@@ -255,7 +285,7 @@ export default function HomePage() {
 
         <div className="container-page relative pb-10">
           <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-4">
-            {STATS.map((stat) => (
+            {statCards.map((stat) => (
               <div key={stat.label} className="bg-card px-5 py-4">
                 <p className="font-mono text-xl font-semibold tracking-tight text-foreground">
                   {stat.value}
@@ -309,6 +339,87 @@ export default function HomePage() {
         </div>
       </section>
 
+      {districts.length > 0 && branches.length > 0 && (
+        <section className="container-page py-16 md:py-20">
+          <SectionHeading
+            eyebrow="Browse"
+            title="Start where you are"
+            description="Jump into the same 450-college record by district or branch. No account needed."
+            actions={
+              <Link href="/colleges">
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  All colleges
+                  <ArrowRight className="size-3.5" />
+                </Button>
+              </Link>
+            }
+          />
+
+          <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12">
+            <div>
+              <div className="flex items-baseline justify-between gap-4">
+                <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  By district
+                </h3>
+                <span className="font-mono text-[11px] text-muted-foreground">
+                  {stats.districts} districts
+                </span>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border">
+                {districts.slice(0, 8).map((item) => (
+                  <Link
+                    key={item.district}
+                    href={`/colleges?district=${encodeURIComponent(item.district)}`}
+                    className="group flex items-center justify-between gap-2 bg-card px-4 py-3 transition-colors hover:bg-accent/60"
+                  >
+                    <span className="truncate text-[13px] font-medium transition-colors group-hover:text-primary">
+                      {item.district}
+                    </span>
+                    <span className="font-mono text-[11px] text-muted-foreground">
+                      {item.colleges}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+              <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+                Counts show colleges with at least one branch record.
+              </p>
+            </div>
+
+            <div>
+              <div className="flex items-baseline justify-between gap-4">
+                <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  By branch
+                </h3>
+                <span className="font-mono text-[11px] text-muted-foreground">
+                  {branches.length} offered
+                </span>
+              </div>
+              <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+                {branches.slice(0, 10).map((item) => (
+                  <li key={item.code}>
+                    <Link
+                      href={`/colleges?branch=${encodeURIComponent(item.code)}`}
+                      className="group flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 transition-colors hover:border-primary/30 hover:bg-accent/40"
+                    >
+                      <span className="grid h-6 min-w-7 place-items-center rounded border border-border bg-surface px-1 font-mono text-[10px] font-semibold text-muted-foreground">
+                        {item.code}
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-[13px] font-medium transition-colors group-hover:text-primary">
+                        {item.name}
+                      </span>
+                      <span className="font-mono text-[11px] text-muted-foreground">
+                        {item.colleges}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="border-y border-border bg-surface/50">
         <div className="container-page py-16 md:py-20">
           <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
@@ -360,13 +471,19 @@ export default function HomePage() {
               Built on the published TNEA record, not opinions.
             </h2>
             <p className="mt-4 max-w-lg text-sm leading-relaxed text-muted-foreground">
-              Cutoff marks, general ranks and seat allotment counts are compiled
-              from official TNEA counselling publications for 2020 through 2025.
-              We keep the raw year attached to every number so you can audit it.
+              Cutoff marks from 2020 to 2025, 2025 closing ranks, and seat
+              allotment records are compiled from published TNEA counselling
+              data. We keep the year attached to every number so you can audit
+              it.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              {["Cutoff marks", "General ranks", "Seat matrix", "Hostel data", "Branch codes"].map(
-                (item) => (
+              {[
+                "Cutoff marks",
+                "2025 closing ranks",
+                "Seat matrix",
+                "Hostel data",
+                "Branch codes",
+              ].map((item) => (
                   <Badge key={item} variant="secondary" className="gap-1 px-2.5 py-1">
                     <CheckCircle2 className="size-3 text-primary" />
                     {item}
@@ -395,10 +512,11 @@ export default function HomePage() {
             </div>
             <dl className="mt-4 divide-y divide-border">
               {[
-                ["Colleges", "447"],
-                ["College–branch combinations", "3,234"],
-                ["Cutoff observations", "250,453"],
-                ["Seat allotment rows", "18,900"],
+                ["Colleges", formatNumber(stats.colleges)],
+                ["College–branch programmes", formatNumber(stats.collegeBranches)],
+                ["Cutoff marks (2020–2025)", formatNumber(stats.cutoffs)],
+                ["Closing ranks (2025)", formatNumber(stats.generalRanks)],
+                ["Seat allotment rows", formatNumber(stats.seats)],
                 ["Communities covered", "7"],
               ].map(([label, value]) => (
                 <div key={label} className="flex items-center justify-between py-3">

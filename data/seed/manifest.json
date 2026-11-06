@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-06T12:53:05.455100+00:00",
+  "generatedAt": "2026-11-06T13:05:53.619720+00:00",
   "source": "Original TNEA imports: 2023 college/branch/hostel/fee/facility exports, 2020-2025 cutoff export, 2025 rank export, and the Information_about_colleges PDF text.",
   "notes": [
     "Closing ranks are stored for 2025 only. The archived 2024 per-year file is an exact duplicate of 2025, so its ranks are not used.",
@@ -31,5 +31,6 @@
     "Self-Financing": 413,
     "University Department": 5
   },
+  "districts": 39,
   "generalRanks": 14719
 }
