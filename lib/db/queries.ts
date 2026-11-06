@@ -686,3 +686,63 @@ export async function getCutoffExplorer(
     },
   };
 }
+
+export type PredictorCandidate = {
+  collegeBranchId: number;
+  collegeCode: string;
+  collegeName: string;
+  collegeShortName: string | null;
+  district: string | null;
+  type: string;
+  branchCode: string;
+  branchName: string;
+  mark: number | null;
+  rank: number | null;
+};
+
+/**
+ * Every 2025 programme result for one community, optionally narrowed to a
+ * branch or district. The prediction bands are applied in the UI layer.
+ */
+export async function getPredictorCandidates(params: {
+  community: Community;
+  branch?: string;
+  district?: string;
+}): Promise<PredictorCandidate[]> {
+  const conditions: SQL[] = [
+    eq(cutoffs.year, 2025),
+    eq(cutoffs.community, params.community),
+    isNotNull(cutoffs.cutoffMark),
+    isNotNull(cutoffs.generalRank),
+  ];
+
+  if (params.branch) {
+    conditions.push(eq(collegeBranches.branchCode, params.branch));
+  }
+  if (params.district) {
+    conditions.push(eq(colleges.district, params.district));
+  }
+
+  return db
+    .select({
+      collegeBranchId: collegeBranches.id,
+      collegeCode: colleges.code,
+      collegeName: colleges.name,
+      collegeShortName: colleges.shortName,
+      district: colleges.district,
+      type: colleges.type,
+      branchCode: collegeBranches.branchCode,
+      branchName: collegeBranches.branchName,
+      mark: cutoffs.cutoffMark,
+      rank: cutoffs.generalRank,
+    })
+    .from(cutoffs)
+    .innerJoin(
+      collegeBranches,
+      eq(cutoffs.collegeBranchId, collegeBranches.id),
+    )
+    .innerJoin(colleges, eq(collegeBranches.collegeCode, colleges.code))
+    .where(and(...conditions))
+    .orderBy(desc(cutoffs.cutoffMark), asc(cutoffs.generalRank))
+    .limit(5000);
+}

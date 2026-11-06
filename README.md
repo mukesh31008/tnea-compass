@@ -1,6 +1,6 @@
 # TNEA Compass
 
-An independent, data-first guide to Tamil Nadu engineering admissions. Search 450 colleges, read six years of published TNEA cutoffs, estimate your rank, and build a counselling choice list you can explain.
+An independent, data-first guide to Tamil Nadu engineering admissions. Search 450 colleges, read six years of published TNEA cutoffs, compare your rank or cutoff with 2025 closing values, and build a counselling choice list you can explain.
 
 > TNEA Compass is not affiliated with the Directorate of Technical Education, Tamil Nadu. Always verify decisions on [tneaonline.org](https://www.tneaonline.org).
 

@@ -51,11 +51,11 @@ const TOOLS = [
       "Compare your rank with recent closing ranks and get an honest shortlist.",
   },
   {
-    href: "/predictor?mode=rank",
+    href: "/predictor?mode=cutoff",
     icon: Calculator,
-    title: "Rank from cutoff",
+    title: "Cutoff check",
     description:
-      "Convert your TNEA cutoff into an estimated general and community rank.",
+      "Compare your cutoff mark with published 2025 closing marks by branch and community.",
   },
   {
     href: "/compare",
