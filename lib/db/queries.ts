@@ -386,6 +386,7 @@ export type CollegeProfile = {
   branches: CollegeProfileBranch[];
   totals: {
     branches: number;
+    seatRows: number;
     seats2025: number;
     allotted2025: number;
     vacant2025: number;
@@ -502,6 +503,7 @@ export async function getCollegeProfile(
     branches: profileBranches,
     totals: {
       branches: profileBranches.length,
+      seatRows: seats.length,
       seats2025: seats.reduce((sum, row) => sum + row.totalSeats, 0),
       allotted2025: seats.reduce((sum, row) => sum + (row.allotted ?? 0), 0),
       vacant2025: seats.reduce((sum, row) => sum + (row.vacant ?? 0), 0),
@@ -745,4 +747,38 @@ export async function getPredictorCandidates(params: {
     .where(and(...conditions))
     .orderBy(desc(cutoffs.cutoffMark), asc(cutoffs.generalRank))
     .limit(5000);
+}
+
+export type CompareSuggestion = {
+  code: string;
+  name: string;
+  shortName: string | null;
+  district: string | null;
+  branchCount: number;
+};
+
+/**
+ * A few colleges with broad programme catalogues, offered as starting points
+ * on the empty compare screen. This is a dataset ordering, not a ranking.
+ */
+export async function getCompareSuggestions(
+  limit = 6,
+): Promise<CompareSuggestion[]> {
+  const branchCount = sql<number>`(
+    select count(*) from ${collegeBranches}
+    where ${collegeBranches.collegeCode} = ${colleges.code}
+  )`;
+
+  return db
+    .select({
+      code: colleges.code,
+      name: colleges.name,
+      shortName: colleges.shortName,
+      district: colleges.district,
+      branchCount,
+    })
+    .from(colleges)
+    .where(isNotNull(colleges.shortName))
+    .orderBy(desc(branchCount), asc(colleges.code))
+    .limit(Math.min(Math.max(Math.floor(limit), 1), 12));
 }

@@ -123,16 +123,60 @@ export default async function CollegeProfilePage({
       >
         <div className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-4">
           {[
-            ["Programmes", formatNumber(totals.branches)],
-            ["2025 seats", formatNumber(totals.seats2025)],
-            ["Allotted", formatNumber(totals.allotted2025)],
-            ["Vacant", formatNumber(totals.vacant2025)],
-          ].map(([label, value]) => (
-            <div key={label} className="bg-card px-4 py-3">
-              <p className="font-mono text-lg font-semibold tracking-tight">
-                {value}
+            { label: "Programmes", value: formatNumber(totals.branches) },
+            {
+              label: "2025 seats",
+              value:
+                totals.seatRows === 0
+                  ? "Not reported"
+                  : formatNumber(totals.seats2025),
+              caption:
+                totals.seatRows === 0
+                  ? "No 2025 seat row"
+                  : `${totals.seatRows} of ${totals.branches} programmes`,
+              missing: totals.seatRows === 0,
+            },
+            {
+              label: "Allotted",
+              value:
+                totals.seatRows === 0
+                  ? "Not reported"
+                  : formatNumber(totals.allotted2025),
+              caption:
+                totals.seatRows === 0
+                  ? "No 2025 seat row"
+                  : `${totals.seatRows} of ${totals.branches} programmes`,
+              missing: totals.seatRows === 0,
+            },
+            {
+              label: "Vacant",
+              value:
+                totals.seatRows === 0
+                  ? "Not reported"
+                  : formatNumber(totals.vacant2025),
+              caption:
+                totals.seatRows === 0
+                  ? "No 2025 seat row"
+                  : `${totals.seatRows} of ${totals.branches} programmes`,
+              missing: totals.seatRows === 0,
+            },
+          ].map((stat) => (
+            <div key={stat.label} className="bg-card px-4 py-3">
+              <p
+                className={
+                  stat.missing
+                    ? "text-[12px] font-medium text-muted-foreground"
+                    : "font-mono text-lg font-semibold tracking-tight"
+                }
+              >
+                {stat.value}
               </p>
-              <p className="text-[11px] text-muted-foreground">{label}</p>
+              <p className="text-[11px] text-muted-foreground">{stat.label}</p>
+              {stat.caption && (
+                <p className="mt-0.5 text-[10px] text-muted-foreground/70">
+                  {stat.caption}
+                </p>
+              )}
             </div>
           ))}
         </div>
@@ -212,6 +256,13 @@ export default async function CollegeProfilePage({
                   </tbody>
                 </table>
               </div>
+              {totals.seatRows < totals.branches && (
+                <p className="border-t border-border px-5 py-3 text-[11px] leading-relaxed text-muted-foreground">
+                  {totals.branches - totals.seatRows} of{" "}
+                  {totals.branches} programmes have no 2025 seat row and are
+                  shown as missing, not zero.
+                </p>
+              )}
             </Card>
 
             <Card className="overflow-hidden">
