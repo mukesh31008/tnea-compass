@@ -1,4 +1,4 @@
-export type ChanceBand =
+export type PositionBand =
   | "comfortable"
   | "likely"
   | "borderline"
@@ -6,14 +6,14 @@ export type ChanceBand =
   | "unlikely";
 
 export type Prediction = {
-  band: ChanceBand;
+  band: PositionBand;
   label: string;
   note: string;
   /** Positive means your position is better than the 2025 closing value. */
   advantage: number;
 };
 
-export const BAND_ORDER: Record<ChanceBand, number> = {
+export const BAND_ORDER: Record<PositionBand, number> = {
   comfortable: 0,
   likely: 1,
   borderline: 2,
@@ -22,7 +22,7 @@ export const BAND_ORDER: Record<ChanceBand, number> = {
 };
 
 export const BAND_META: Record<
-  ChanceBand,
+  PositionBand,
   { label: string; tone: "success" | "warning" | "outline" | "destructive" }
 > = {
   comfortable: { label: "Strong signal", tone: "success" },

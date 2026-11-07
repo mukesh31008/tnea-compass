@@ -46,9 +46,9 @@ const TOOLS = [
   {
     href: "/predictor",
     icon: Sparkles,
-    title: "Chance predictor",
+    title: "Where you stand",
     description:
-      "Compare your rank with recent closing ranks and get an honest shortlist.",
+      "Compare your rank or cutoff with published closing values and see the distance.",
   },
   {
     href: "/predictor?mode=cutoff",
@@ -198,7 +198,7 @@ export default async function HomePage() {
                     <Compass className="size-4" />
                   </span>
                   <div>
-                    <p className="text-sm font-semibold">Check your chances</p>
+                    <p className="text-sm font-semibold">Read your position</p>
                     <p className="text-[11px] text-muted-foreground">
                       Based on 2025 closing ranks
                     </p>
@@ -271,12 +271,12 @@ export default async function HomePage() {
                 </div>
 
                 <Button type="submit" className="h-11 w-full gap-2">
-                  See my shortlist
+                  Compare with 2025 closes
                   <ArrowRight className="size-4" />
                 </Button>
 
                 <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
-                  No sign-up. Inputs are used only for this prediction.
+                  No sign-up. Inputs are used only for this comparison.
                 </p>
               </form>
             </Card>
@@ -557,7 +557,7 @@ export default async function HomePage() {
               <Link href="/predictor">
                 <Button size="lg" className="w-full gap-2 bg-background text-foreground hover:bg-background/90 sm:w-auto">
                   <Sparkles className="size-4" />
-                  Predict my chances
+                  See where I stand
                 </Button>
               </Link>
               <Link href="/colleges">

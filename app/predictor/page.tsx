@@ -28,15 +28,15 @@ import {
   isValidRank,
   predictByCutoff,
   predictByRank,
-  type ChanceBand,
+  type PositionBand,
 } from "@/lib/predictor";
 import { communityLabel, isCommunity, type Community } from "@/lib/tnea";
 import { formatCutoff, formatNumber } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Chance predictor",
+  title: "Where you stand",
   description:
-    "Compare your TNEA rank or cutoff mark with published 2025 closing ranks and marks. Honest bands, no guarantees.",
+    "Compare your TNEA rank or cutoff mark with published 2025 closing ranks and marks. A distance reading, not an admission probability.",
 };
 
 export const dynamic = "force-dynamic";
@@ -95,14 +95,13 @@ export default async function PredictorPage({
   const predictions =
     hasInput && !error
       ? candidates
-          .filter(
-            (candidate) =>
-              candidate.mark !== null && candidate.rank !== null,
+          .filter((candidate) =>
+            activeMode === "rank"
+              ? candidate.rank !== null
+              : candidate.mark !== null,
           )
           .map((candidate) => ({
             ...candidate,
-            mark: candidate.mark as number,
-            rank: candidate.rank as number,
             prediction:
               activeMode === "rank"
                 ? predictByRank(rank as number, candidate.rank as number)
@@ -113,11 +112,19 @@ export default async function PredictorPage({
   predictions.sort((a, b) => {
     const band = BAND_ORDER[a.prediction.band] - BAND_ORDER[b.prediction.band];
     if (band !== 0) return band;
-    if (activeMode === "rank") return a.rank - b.rank;
-    return b.mark - a.mark || a.rank - b.rank;
+    if (activeMode === "rank") {
+      return (a.rank ?? Number.POSITIVE_INFINITY) -
+        (b.rank ?? Number.POSITIVE_INFINITY);
+    }
+    return (
+      (b.mark ?? Number.NEGATIVE_INFINITY) -
+        (a.mark ?? Number.NEGATIVE_INFINITY) ||
+      (a.rank ?? Number.POSITIVE_INFINITY) -
+        (b.rank ?? Number.POSITIVE_INFINITY)
+    );
   });
 
-  const bandCounts = new Map<ChanceBand, number>();
+  const bandCounts = new Map<PositionBand, number>();
   for (const prediction of predictions) {
     bandCounts.set(
       prediction.prediction.band,
@@ -167,9 +174,9 @@ export default async function PredictorPage({
   return (
     <>
       <PageHeader
-        eyebrow="Predictor"
-        title="What are my chances?"
-        description="Compare your position with published 2025 closing ranks and marks. The result is a reading of the data, never a guarantee."
+        eyebrow="Position"
+        title="Where do you stand?"
+        description="Compare your rank or cutoff with published 2025 closing values. The result is a distance reading, not an admission probability."
         actions={
           <Badge variant="outline" className="gap-1.5 px-3 py-1.5">
             <Sparkles className="size-3.5 text-primary" />
@@ -258,7 +265,7 @@ export default async function PredictorPage({
                   "borderline",
                   "stretch",
                   "unlikely",
-                ] as ChanceBand[]
+                ] as PositionBand[]
               ).map((band) => (
                 <Card key={band} className="px-3 py-2.5">
                   <p className="font-mono text-lg font-semibold">
@@ -362,10 +369,14 @@ export default async function PredictorPage({
                           </td>
                           <td className="px-3 py-3 text-right">
                             <span className="font-mono text-[12px] font-semibold">
-                              {formatCutoff(row.mark)}
+                              {row.mark === null
+                                ? "Not reported"
+                                : formatCutoff(row.mark)}
                             </span>
                             <span className="mt-0.5 block font-mono text-[10px] text-muted-foreground">
-                              #{formatNumber(row.rank)}
+                              {row.rank === null
+                                ? "rank n/r"
+                                : `#${formatNumber(row.rank)}`}
                             </span>
                           </td>
                           <td className="px-3 py-3 text-right font-mono text-[11px] text-muted-foreground">
@@ -409,6 +420,8 @@ export default async function PredictorPage({
                                 type: row.type,
                                 branchCode: row.branchCode,
                                 branchName: row.branchName,
+                                community,
+                                dataYear: 2025,
                                 cutoffMark: row.mark,
                                 rank: row.rank,
                               }}

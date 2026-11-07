@@ -43,7 +43,7 @@ export function PredictorForm({
         <div
           className="inline-flex rounded-lg border border-border bg-muted/40 p-0.5"
           role="tablist"
-          aria-label="Prediction mode"
+          aria-label="Comparison mode"
         >
           <button
             type="button"
@@ -179,7 +179,7 @@ export function PredictorForm({
           </p>
           <Button type="submit" className="gap-2 sm:w-auto">
             <Search className="size-4" />
-            Check my chances
+            Read my position
             <ArrowRight className="size-3.5" />
           </Button>
         </div>

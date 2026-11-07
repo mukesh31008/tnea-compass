@@ -8,7 +8,7 @@ const COLUMNS = [
     links: [
       { label: "College explorer", href: "/colleges" },
       { label: "Cutoff trends", href: "/cutoffs" },
-      { label: "Chance predictor", href: "/predictor" },
+      { label: "Where you stand", href: "/predictor" },
       { label: "Compare colleges", href: "/compare" },
     ],
   },

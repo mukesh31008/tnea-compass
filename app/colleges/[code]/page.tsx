@@ -267,6 +267,8 @@ export default async function CollegeProfilePage({
                               type: college.type,
                               branchCode: branch.branchCode,
                               branchName: branch.branchName,
+                              community: "OC",
+                              dataYear: 2025,
                               cutoffMark: branch.cutoffs2025.OC?.mark ?? null,
                               rank: branch.cutoffs2025.OC?.rank ?? null,
                             }}

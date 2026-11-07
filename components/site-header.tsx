@@ -19,7 +19,7 @@ import { useChoices } from "@/components/choices-provider";
 const NAV = [
   { href: "/colleges", label: "Colleges" },
   { href: "/cutoffs", label: "Cutoffs" },
-  { href: "/predictor", label: "Predictor" },
+  { href: "/predictor", label: "Position" },
   { href: "/compare", label: "Compare" },
   { href: "/choices", label: "My list" },
 ] as const;
@@ -103,7 +103,7 @@ export function SiteHeader() {
           </Link>
           <Link href="/predictor" className="hidden sm:block">
             <Button size="sm" className="gap-1.5">
-              Check chances
+              Where I stand
             </Button>
           </Link>
 
@@ -166,7 +166,7 @@ export function SiteHeader() {
                   </Button>
                 </Link>
                 <Link href="/predictor">
-                  <Button className="w-full">Check my chances</Button>
+                  <Button className="w-full">Where I stand</Button>
                 </Link>
               </div>
             </SheetContent>

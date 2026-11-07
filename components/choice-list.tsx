@@ -60,8 +60,10 @@ function downloadCsv(choices: ChoiceRecord[]) {
     "branch_name",
     "district",
     "college_type",
-    "oc_cutoff_2025",
-    "oc_rank_2025",
+    "community",
+    "data_year",
+    "closing_mark",
+    "closing_rank",
     "added_at",
   ];
   const rows = choices.map((choice, index) =>
@@ -73,6 +75,8 @@ function downloadCsv(choices: ChoiceRecord[]) {
       choice.branchName,
       choice.district,
       choice.type,
+      choice.community,
+      choice.dataYear,
       choice.cutoffMark,
       choice.rank,
       choice.addedAt,
@@ -114,6 +118,11 @@ function SortableChoice({
     transition,
     isDragging,
   } = useSortable({ id: choice.id });
+
+  const contextLabel =
+    choice.community && choice.dataYear
+      ? `${choice.community} ${choice.dataYear}`
+      : "Context not recorded";
 
   return (
     <li
@@ -173,7 +182,7 @@ function SortableChoice({
             </p>
           )}
           <p className="mt-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
-            OC 2025
+            {contextLabel}
           </p>
           <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
             {choice.rank === null ? "rank n/r" : `#${formatNumber(choice.rank)}`}
@@ -236,8 +245,8 @@ function EmptyChoices() {
           Build a list you can explain
         </h2>
         <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-          Add a branch from any college profile or predictor result. The list is
-          saved in this browser only, and you can reorder it, print it, or
+          Add a branch from any college profile or comparison result. The list
+          is saved in this browser only, and you can reorder it, print it, or
           export a CSV.
         </p>
         <div className="mt-6 flex flex-col gap-2 sm:flex-row">
@@ -249,7 +258,7 @@ function EmptyChoices() {
           </Button>
           <Button asChild variant="outline" className="gap-1.5">
             <Link href="/predictor">
-              Check my chances
+              Compare a rank
               <ArrowRight className="size-3.5" />
             </Link>
           </Button>
@@ -294,6 +303,9 @@ export function ChoiceList() {
   const ids = choices.map((choice) => choice.id);
   const withCutoff = choices.filter(
     (choice) => choice.cutoffMark !== null,
+  ).length;
+  const missingContext = choices.filter(
+    (choice) => choice.community === null || choice.dataYear === null,
   ).length;
 
   const moveTo = (from: number, to: number) => {
@@ -361,7 +373,7 @@ export function ChoiceList() {
                 {withCutoff}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                with a 2025 OC mark
+                with a recorded close
               </p>
             </div>
           </div>
@@ -416,6 +428,15 @@ export function ChoiceList() {
           your browser data will remove the list. Reorder by dragging a row or
           using the arrow buttons.
         </p>
+        {missingContext > 0 && (
+          <p className="mt-2 rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-[11px] leading-relaxed text-foreground">
+            {missingContext === 1
+              ? "1 saved choice has no community or data year."
+              : `${missingContext} saved choices have no community or data year.`}{" "}
+            Re-add them from a result or college page so the closing value keeps
+            its context.
+          </p>
+        )}
       </Card>
 
       <DndContext
