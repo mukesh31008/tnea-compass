@@ -9,8 +9,10 @@ import {
   Database,
   GitCompareArrows,
   ListChecks,
+  MessageSquareQuote,
   Search,
   ShieldCheck,
+  BookOpenCheck,
   Sparkles,
   TrendingUp,
 } from "lucide-react";
@@ -29,6 +31,13 @@ import { formatNumber } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 const TOOLS = [
+  {
+    href: "/assistant",
+    icon: MessageSquareQuote,
+    title: "Ask the record",
+    description:
+      "Ask for a cutoff, round timeline, seat count or vacancy. Get one cited answer, or a refusal.",
+  },
   {
     href: "/colleges",
     icon: Building2,
@@ -70,6 +79,13 @@ const TOOLS = [
     title: "Choice list",
     description:
       "Build, reorder and export a counselling list with duplicate checks.",
+  },
+  {
+    href: "/pathways",
+    icon: BookOpenCheck,
+    title: "Admission pathways",
+    description:
+      "A versioned map of government quota, management quota, lateral entry and special categories.",
   },
 ];
 
@@ -305,7 +321,7 @@ export default async function HomePage() {
         <SectionHeading
           eyebrow="The toolkit"
           title="Everything you need, in one place"
-          description="Six focused tools that follow the actual TNEA counselling workflow — from first shortlist to final choice order."
+          description="Eight focused tools that follow the actual TNEA counselling workflow — from first question to final choice order."
           actions={
             <Link href="/colleges">
               <Button variant="outline" size="sm" className="gap-1.5">

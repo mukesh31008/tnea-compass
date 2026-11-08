@@ -11,6 +11,7 @@ import {
   GitCompareArrows,
   ListChecks,
   BookOpenCheck,
+  Quote,
   Search,
   Sparkles,
   Calculator,
@@ -26,6 +27,7 @@ type SearchCollege = {
 };
 
 const QUICK_LINKS = [
+  { label: "Ask the record", href: "/assistant", icon: Quote, hint: "Cited answers" },
   { label: "College explorer", href: "/colleges", icon: Building2, hint: "478 institutions" },
   { label: "Cutoff trends", href: "/cutoffs", icon: BarChart3, hint: "2020 – 2026" },
   { label: "Where you stand", href: "/predictor", icon: Sparkles, hint: "By rank or mark" },

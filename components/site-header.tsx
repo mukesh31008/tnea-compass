@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { useChoices } from "@/components/choices-provider";
 
 const NAV = [
+  { href: "/assistant", label: "Ask" },
   { href: "/colleges", label: "Colleges" },
   { href: "/cutoffs", label: "Cutoffs" },
   { href: "/predictor", label: "Position" },

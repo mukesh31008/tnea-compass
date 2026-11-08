@@ -66,6 +66,37 @@ The 2026 published cutoff lists group candidates by the **community the seat was
 
 The archived 2024 rank export is an exact duplicate of 2025, so closing ranks are shown for 2025 and 2026 only. Missing values are shown as **Not reported**; nothing is filled in or estimated.
 
+## Ask the record
+
+`/assistant` is a cited-answer tool, not a free-form chatbot. It accepts a
+question, resolves a college/branch/community/year against the public dataset,
+and returns one evidence card: the value, its community basis, the source round
+and PDF page, caveats, and source links.
+
+- Deterministic lookup works with **no AI key**. SQLite is the only source of
+  values.
+- An optional OpenAI-compatible model (`OPENAI_API_KEY`, `AI_BASE_URL`,
+  `AI_MODEL`) is used only when the deterministic parser cannot resolve the
+  college or comparison target. It maps the question onto a fixed schema; it
+  never writes the answer and never sees private tracker data.
+- It refuses admission chances, predictions, eligibility rulings, college advice,
+  fee/placement claims, and rank-to-mark conversion.
+- Missing values are reported as **Not reported**, never zero or an estimate.
+- No conversation is stored. `POST /api/assistant` is rate-limited per client
+  (20 requests/minute, 500-character question cap) and answers are cached in
+  memory for five minutes.
+
+Example questions:
+
+```text
+What was the 2026 OC close for CEG Computer Science?
+Show the R1-R3 timeline for 0001 CS for BC.
+Show the 2026 seat matrix for 0001.
+Which colleges had the most vacancies in ECE after Round 3?
+Compare 0001 and 2006 for Computer Science in 2026.
+Where did the 2026 cutoff data come from?
+```
+
 ## Private tracker
 
 Email/password accounts unlock a private, minimal planning record:
@@ -84,11 +115,35 @@ Privacy choices: no Aadhaar, date of birth, photographs, uploaded certificates o
 
 1. Provision a libSQL/Turso database and set `DATABASE_URL` + `DATABASE_AUTH_TOKEN`.
 2. Set `NEXT_PUBLIC_SITE_URL`, `BETTER_AUTH_URL` and a strong `BETTER_AUTH_SECRET`.
+   Production fails closed on auth if the secret is missing; it does not use a
+   known fallback.
 3. Run `npm run db:migrate` and `npm run db:seed` against that database.
 4. Run `npm run typecheck`, `npm run lint`, `npm test` and `npm run build`.
-5. Verify `/about#data` lists the six 2026 source PDFs and their hashes.
+5. Start the app and check:
+   - `GET /api/health` returns `{ "status": "ok" }`
+   - `GET /robots.txt` and `GET /sitemap.xml` use the production site URL
+   - `/assistant` answers the sample questions with a source citation
+   - `/about#data` lists the six 2026 source PDFs and their hashes
+   - the security headers are present (`Content-Security-Policy`,
+     `X-Frame-Options`, `Referrer-Policy`, HSTS in production)
 6. Do not enable email verification until a mail provider is configured.
+
+`NEXT_PUBLIC_SITE_URL` must be the final HTTPS origin, without a trailing slash.
+The sitemap, canonical metadata, auth callback and OpenGraph URLs all derive from
+it.
+
+### Deployment readiness files
+
+- `app/robots.ts` — crawler rules and sitemap location
+- `app/sitemap.ts` — public canonical routes
+- `app/api/health/route.ts` — process + database probe
+- `next.config.ts` — CSP, frame denial, referrer and permissions policy, HSTS
+  in production
+- `/api/assistant` — zod-validated, rate-limited, `no-store` answer endpoint
 
 ## Status
 
-The public data layer, 2026 ingest and private tracker are built. Deployment is intentionally manual and needs the operator's credentials.
+The public data layer, 2026 ingest, private tracker, grounded assistant and
+deployment readiness files are built. Deployment is intentionally manual and
+needs the operator's credentials; no deployment has been performed from this
+repository.

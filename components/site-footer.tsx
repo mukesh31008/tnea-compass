@@ -6,6 +6,7 @@ const COLUMNS = [
   {
     title: "Plan",
     links: [
+      { label: "Ask the record", href: "/assistant" },
       { label: "College explorer", href: "/colleges" },
       { label: "Cutoff trends", href: "/cutoffs" },
       { label: "Where you stand", href: "/predictor" },
