@@ -9,7 +9,7 @@ export type Prediction = {
   band: PositionBand;
   label: string;
   note: string;
-  /** Positive means your position is better than the 2025 closing value. */
+  /** Positive means your position is better than the published close. */
   advantage: number;
 };
 
@@ -47,7 +47,7 @@ export function predictByRank(
     return {
       band: "comfortable",
       label: BAND_META.comfortable.label,
-      note: "Your rank is well inside the 2025 closing rank.",
+      note: "Your rank is well inside the published closing rank.",
       advantage,
     };
   }
@@ -55,7 +55,7 @@ export function predictByRank(
     return {
       band: "likely",
       label: BAND_META.likely.label,
-      note: "Your rank is at or better than the 2025 closing rank.",
+      note: "Your rank is at or better than the published closing rank.",
       advantage,
     };
   }
@@ -63,7 +63,7 @@ export function predictByRank(
     return {
       band: "borderline",
       label: BAND_META.borderline.label,
-      note: "Close to the 2025 closing rank; later rounds can move.",
+      note: "Close to the published closing rank; later rounds can move.",
       advantage,
     };
   }
@@ -71,14 +71,14 @@ export function predictByRank(
     return {
       band: "stretch",
       label: BAND_META.stretch.label,
-      note: "Outside the 2025 closing rank, but within reach if it moves.",
+      note: "Outside the published closing rank, but within reach if it moves.",
       advantage,
     };
   }
   return {
     band: "unlikely",
     label: BAND_META.unlikely.label,
-    note: "Well outside the 2025 closing rank for this programme.",
+    note: "Well outside the published closing rank for this programme.",
     advantage,
   };
 }
@@ -97,7 +97,7 @@ export function predictByCutoff(
     return {
       band: "comfortable",
       label: BAND_META.comfortable.label,
-      note: "Your mark is 5 or more above the 2025 closing mark.",
+      note: "Your mark is 5 or more above the published closing mark.",
       advantage,
     };
   }
@@ -105,7 +105,7 @@ export function predictByCutoff(
     return {
       band: "likely",
       label: BAND_META.likely.label,
-      note: "Your mark is at or above the 2025 closing mark.",
+      note: "Your mark is at or above the published closing mark.",
       advantage,
     };
   }
@@ -113,7 +113,7 @@ export function predictByCutoff(
     return {
       band: "borderline",
       label: BAND_META.borderline.label,
-      note: "Within 2 marks of the 2025 closing mark.",
+      note: "Within 2 marks of the published closing mark.",
       advantage,
     };
   }
@@ -121,14 +121,14 @@ export function predictByCutoff(
     return {
       band: "stretch",
       label: BAND_META.stretch.label,
-      note: "2 to 5 marks below the 2025 closing mark.",
+      note: "2 to 5 marks below the published closing mark.",
       advantage,
     };
   }
   return {
     band: "unlikely",
     label: BAND_META.unlikely.label,
-    note: "More than 5 marks below the 2025 closing mark.",
+    note: "More than 5 marks below the published closing mark.",
     advantage,
   };
 }

@@ -19,6 +19,7 @@ export function PredictorForm({
   district,
   rank,
   cutoff,
+  year,
   districts,
   branches,
 }: {
@@ -28,6 +29,7 @@ export function PredictorForm({
   district: string | null;
   rank: string;
   cutoff: string;
+  year: number;
   districts: DistrictOption[];
   branches: BranchOption[];
 }) {
@@ -77,7 +79,7 @@ export function PredictorForm({
           </button>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {activeMode === "rank" ? (
             <label className="block">
               <span className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
@@ -137,6 +139,20 @@ export function PredictorForm({
 
           <label className="block">
             <span className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
+              Comparison year
+            </span>
+            <select
+              name="year"
+              defaultValue={String(year)}
+              className="h-9 w-full rounded-lg border border-input bg-card px-2.5 text-[13px] shadow-xs outline-none focus-visible:border-ring/50 focus-visible:ring-2 focus-visible:ring-ring/20"
+            >
+              <option value="2026">2026 — final cumulative close</option>
+              <option value="2025">2025 — previous close</option>
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
               Branch
             </span>
             <select
@@ -174,8 +190,9 @@ export function PredictorForm({
 
         <div className="mt-4 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="max-w-md text-[11px] leading-relaxed text-muted-foreground">
-            Compared with published 2025 closing values only. A rank and a
-            cutoff mark are not converted into each other.
+            Compared with one published close at a time. A rank and a cutoff
+            mark are not converted into each other. In 2026 the table groups by
+            the community the seat was allotted against.
           </p>
           <Button type="submit" className="gap-2 sm:w-auto">
             <Search className="size-4" />

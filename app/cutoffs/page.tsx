@@ -31,7 +31,7 @@ import { formatCutoff, formatNumber } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Cutoff trends",
   description:
-    "Browse published TNEA cutoff marks from 2020 to 2025, with 2025 closing ranks, by branch, community, district and college.",
+    "Browse published TNEA cutoff marks from 2020 to 2026, with 2025 and 2026 closing ranks, by branch, community, district and college.",
 };
 
 export const dynamic = "force-dynamic";
@@ -60,10 +60,10 @@ export default async function CutoffsPage({
 }) {
   const params = await searchParams;
 
-  const yearParam = Number(first(params.year) ?? "2025");
+  const yearParam = Number(first(params.year) ?? "2026");
   const year = (CUTOFF_YEARS as readonly number[]).includes(yearParam)
     ? yearParam
-    : 2025;
+    : 2026;
 
   const communityParam = first(params.community) ?? "OC";
   const community: Community = isCommunity(communityParam)
@@ -109,11 +109,11 @@ export default async function CutoffsPage({
       <PageHeader
         eyebrow="Cutoffs"
         title="Closing marks, without the guesswork"
-        description="Read published TNEA cutoff marks from 2020 to 2025. Compare branches and communities, then follow a programme's six-year trend."
+        description="Read published TNEA cutoff marks from 2020 to 2026. Compare branches and communities, follow a programme's year trend, and open the 2026 round-by-round close."
         actions={
           <Badge variant="outline" className="gap-1.5 px-3 py-1.5">
             <BarChart3 className="size-3.5 text-primary" />
-            2025 ranks included
+            2025 &amp; 2026 ranks included
           </Badge>
         }
       />
@@ -155,7 +155,12 @@ export default async function CutoffsPage({
             {communityLabel(community)} · {branchName}
             {district ? ` · ${district}` : ""}
           </span>
-          <span>Marks out of 200. Ranks are published for 2025 only.</span>
+          <span>
+            Marks out of 200.{" "}
+            {results.communityBasis === "allotted"
+              ? "2026 groups by the community the seat was allotted against."
+              : "Ranks are published for 2025 and 2026."}
+          </span>
         </div>
 
         {results.rows.length === 0 ? (
@@ -203,7 +208,9 @@ export default async function CutoffsPage({
                     <th className="px-3 py-2.5 text-right font-medium">
                       General rank
                     </th>
-                    <th className="px-4 py-2.5 font-medium">2020–2025</th>
+                    <th className="px-4 py-2.5 font-medium">
+                      {year === 2026 ? "R1–R3" : "2020–2025"}
+                    </th>
                     <th className="w-10 px-3 py-2.5" />
                   </tr>
                 </thead>
@@ -244,7 +251,7 @@ export default async function CutoffsPage({
                         {formatCutoff(row.mark)}
                       </td>
                       <td className="px-3 py-3 text-right">
-                        {year === 2025 && row.rank !== null ? (
+                        {row.rank !== null ? (
                           <span className="font-mono text-[12px]">
                             #{formatNumber(row.rank)}
                           </span>
@@ -253,12 +260,25 @@ export default async function CutoffsPage({
                             —
                           </span>
                         )}
+                        {year === 2026 && row.sourcePage !== null && (
+                          <span className="mt-0.5 block font-mono text-[10px] text-muted-foreground">
+                            R{row.sourceRound ?? "?"} · p{row.sourcePage}
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
-                        <CutoffSparkline
-                          values={row.history}
-                          label={`${row.collegeShortName ?? row.collegeName}, ${row.branchName}, ${community} cutoff marks 2020 to 2025`}
-                        />
+                        {year === 2026 ? (
+                          <CutoffSparkline
+                            values={row.rounds.map((round) => round.mark)}
+                            labels={row.rounds.map((round) => `R${round.round}`)}
+                            label={`${row.collegeShortName ?? row.collegeName}, ${row.branchName}, ${community} cumulative close after each 2026 round`}
+                          />
+                        ) : (
+                          <CutoffSparkline
+                            values={row.history}
+                            label={`${row.collegeShortName ?? row.collegeName}, ${row.branchName}, ${community} cutoff marks 2020 to 2025`}
+                          />
+                        )}
                       </td>
                       <td className="px-3 py-3 text-right">
                         <Link
@@ -278,7 +298,9 @@ export default async function CutoffsPage({
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-5 py-3 text-[11px] text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
                 <TrendingUp className="size-3.5 text-primary" />
-                The sparkline follows the same community across all six years.
+                {year === 2026
+                  ? "The sparkline follows the cumulative close after Rounds 1, 2 and 3."
+                  : "The sparkline follows the same community across 2020–2025."}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <Info className="size-3.5" />

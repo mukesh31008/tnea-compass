@@ -39,12 +39,12 @@ export function SiteFooter() {
             <Logo />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
               An independent, data-first guide to Tamil Nadu engineering
-              admissions. Built on six years of published TNEA cutoffs and seat
+              admissions. Built on seven years of published TNEA cutoffs and seat
               allotment records.
             </p>
             <p className="mt-4 inline-flex items-center gap-2 rounded-md border border-border bg-card px-2.5 py-1.5 text-[11px] text-muted-foreground">
               <span className="size-1.5 rounded-full bg-success" />
-              Data updated for 2025 counselling
+              Data updated for 2026 counselling
             </p>
           </div>
 

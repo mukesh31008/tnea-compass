@@ -36,7 +36,7 @@ import { formatCutoff, formatNumber } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Where you stand",
   description:
-    "Compare your TNEA rank or cutoff mark with published 2025 closing ranks and marks. A distance reading, not an admission probability.",
+    "Compare your TNEA rank or cutoff mark with the published 2026 final close or the 2025 close. A distance reading, not an admission probability.",
 };
 
 export const dynamic = "force-dynamic";
@@ -72,6 +72,8 @@ export default async function PredictorPage({
     : "OC";
   const branch = first(params.branch) || undefined;
   const district = first(params.district) || undefined;
+  const yearParam = Number(first(params.year) ?? "2026");
+  const year = yearParam === 2025 ? 2025 : 2026;
 
   const hasInput = Boolean(rankRaw || cutoffRaw);
   const error = hasInput
@@ -89,7 +91,7 @@ export default async function PredictorPage({
 
   const candidates =
     hasInput && !error
-      ? await getPredictorCandidates({ community, branch, district })
+      ? await getPredictorCandidates({ community, branch, district, year })
       : [];
 
   const predictions =
@@ -155,6 +157,7 @@ export default async function PredictorPage({
     resultParams.set("cutoff", String(cutoff));
   }
   resultParams.set("community", community);
+  resultParams.set("year", String(year));
   if (branch) resultParams.set("branch", branch);
   if (district) resultParams.set("district", district);
 
@@ -176,11 +179,11 @@ export default async function PredictorPage({
       <PageHeader
         eyebrow="Position"
         title="Where do you stand?"
-        description="Compare your rank or cutoff with published 2025 closing values. The result is a distance reading, not an admission probability."
+        description={`Compare your rank or cutoff with the published ${year} closing values. The result is a distance reading, not an admission probability.`}
         actions={
           <Badge variant="outline" className="gap-1.5 px-3 py-1.5">
             <Sparkles className="size-3.5 text-primary" />
-            2025 closing data
+            {year} closing data
           </Badge>
         }
       />
@@ -193,6 +196,7 @@ export default async function PredictorPage({
           district={district ?? null}
           rank={rankRaw ?? ""}
           cutoff={cutoffRaw ?? ""}
+          year={year}
           districts={districts}
           branches={branches}
         />
@@ -213,8 +217,11 @@ export default async function PredictorPage({
               },
               {
                 icon: TrendingUp,
-                title: "Compare the 2025 close",
-                body: "Every programme is checked against its published 2025 closing rank or closing mark for your community.",
+                title: `Compare the ${year} close`,
+                body:
+                  year === 2026
+                    ? "Every programme is checked against its final cumulative 2026 close, grouped by the community the seat was allotted against."
+                    : "Every programme is checked against its published 2025 closing rank or closing mark for your community.",
               },
               {
                 icon: ShieldCheck,
@@ -246,8 +253,8 @@ export default async function PredictorPage({
                 </h2>
                 <p className="mt-1 text-[12px] text-muted-foreground">
                   {communityLabel(community)} ·{" "}
-                  {formatNumber(predictions.length)} programmes with a 2025
-                  closing value
+                  {formatNumber(predictions.length)} programmes with a {year}
+                  {" "}closing value
                 </p>
               </div>
               <Button asChild variant="outline" size="sm" className="gap-1.5">
@@ -284,7 +291,7 @@ export default async function PredictorPage({
                   <Info className="size-6" />
                 </span>
                 <h2 className="mt-4 text-lg font-semibold">
-                  No 2025 rows for these filters
+                  No {year} rows for these filters
                 </h2>
                 <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-muted-foreground">
                   Try another branch or district, or switch to a different
@@ -301,7 +308,7 @@ export default async function PredictorPage({
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-4">
                   <div>
                     <h2 className="text-sm font-semibold">
-                      Comparison with 2025 closing values
+                      Comparison with {year} closing values
                     </h2>
                     <p className="mt-0.5 text-[11px] text-muted-foreground">
                       Strongest signals first, then the most competitive
@@ -322,7 +329,7 @@ export default async function PredictorPage({
                         <th className="px-4 py-2.5 font-medium">College</th>
                         <th className="px-3 py-2.5 font-medium">Branch</th>
                         <th className="px-3 py-2.5 text-right font-medium">
-                          2025 close
+                          {year} close
                         </th>
                         <th className="px-3 py-2.5 text-right font-medium">
                           Your margin
@@ -421,7 +428,7 @@ export default async function PredictorPage({
                                 branchCode: row.branchCode,
                                 branchName: row.branchName,
                                 community,
-                                dataYear: 2025,
+                                dataYear: year,
                                 cutoffMark: row.mark,
                                 rank: row.rank,
                               }}
@@ -435,7 +442,7 @@ export default async function PredictorPage({
 
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-5 py-3 text-[11px] text-muted-foreground">
                   <span>
-                    “Inside” means your rank number is lower than the 2025
+                    “Inside” means your rank number is lower than the {year}{" "}
                     closing rank.
                   </span>
                   <span>Published values only. No estimate is invented.</span>
@@ -486,7 +493,7 @@ export default async function PredictorPage({
                   <span className="font-medium text-foreground">
                     Strong signal:
                   </span>{" "}
-                  rank at least 20% inside the 2025 close, or a mark 5+ above.
+                  rank at least 20% inside the published close, or a mark 5+ above.
                 </p>
                 <p>
                   <span className="font-medium text-foreground">
@@ -510,8 +517,9 @@ export default async function PredictorPage({
                 </p>
                 <p>
                   <span className="font-medium text-foreground">Important:</span>{" "}
-                  2025 closing values only. 2024 ranks were a duplicate export
-                  and are not used.
+                  {year === 2026
+                    ? "2026 is the final cumulative close after Round 3, grouped by the community the seat was allotted against. 2024 ranks were a duplicate export and are not used."
+                    : "2025 candidate-community closing values. 2024 ranks were a duplicate export and are not used."}
                 </p>
               </div>
             </Card>

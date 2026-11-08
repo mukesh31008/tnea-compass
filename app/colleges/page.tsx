@@ -24,7 +24,7 @@ import { formatNumber } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "College explorer",
   description:
-    "Search and filter 450 Tamil Nadu engineering colleges by district, branch, type, hostel and autonomy.",
+    "Search and filter 478 Tamil Nadu engineering colleges by district, branch, type, hostel and autonomy.",
 };
 
 export const dynamic = "force-dynamic";
@@ -96,7 +96,7 @@ export default async function CollegesPage({
       <PageHeader
         eyebrow="Explore"
         title="Find a college on the record"
-        description="Search 450 institutions, then narrow by district, branch, hostel and autonomy. Every profile links back to its published cutoffs and seat data."
+        description="Search 478 institutions, then narrow by district, branch, hostel and autonomy. Every profile links back to its published cutoffs and seat data."
         actions={
           <Badge variant="outline" className="gap-1.5 px-3 py-1.5">
             <Building2 className="size-3.5 text-primary" />

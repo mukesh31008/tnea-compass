@@ -34,14 +34,14 @@ const TOOLS = [
     icon: Building2,
     title: "College explorer",
     description:
-      "Filter 450 institutions by district, branch, accreditation, hostel and more.",
+      "Filter Tamil Nadu institutions by district, branch, accreditation, hostel and more.",
   },
   {
     href: "/cutoffs",
     icon: BarChart3,
     title: "Cutoff trends",
     description:
-      "See how closing marks moved across six years, every branch and community.",
+      "See how closing marks moved across seven years, every branch and community.",
   },
   {
     href: "/predictor",
@@ -55,7 +55,7 @@ const TOOLS = [
     icon: Calculator,
     title: "Cutoff check",
     description:
-      "Compare your cutoff mark with published 2025 closing marks by branch and community.",
+      "Compare your cutoff mark with the published closing marks by branch and community.",
   },
   {
     href: "/compare",
@@ -82,7 +82,7 @@ const STEPS = [
   {
     n: "02",
     title: "Read the evidence",
-    body: "Every result shows the 2025 closing rank and earlier cutoff marks it was compared against.",
+    body: "Every result shows the published closing rank and earlier cutoff marks it was compared against.",
   },
   {
     n: "03",
@@ -107,7 +107,7 @@ export default async function HomePage() {
     {
       value: formatNumber(stats.cutoffs),
       label: "Cutoff marks",
-      hint: "2020 – 2025",
+      hint: "2020 – 2026",
     },
     {
       value: formatNumber(stats.branches),
@@ -147,7 +147,7 @@ export default async function HomePage() {
 
             <Reveal delay={120}>
               <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted-foreground sm:text-base">
-                Search Tamil Nadu&apos;s engineering colleges, read six years of
+                Search Tamil Nadu&apos;s engineering colleges, read seven years of
                 real cutoffs, and build a choice list you can defend — without
                 guessing.
               </p>
@@ -200,7 +200,7 @@ export default async function HomePage() {
                   <div>
                     <p className="text-sm font-semibold">Read your position</p>
                     <p className="text-[11px] text-muted-foreground">
-                      Based on 2025 closing ranks
+                      Based on the 2026 final close
                     </p>
                   </div>
                 </div>
@@ -271,12 +271,13 @@ export default async function HomePage() {
                 </div>
 
                 <Button type="submit" className="h-11 w-full gap-2">
-                  Compare with 2025 closes
+                  Compare with 2026 closes
                   <ArrowRight className="size-4" />
                 </Button>
 
                 <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
-                  No sign-up. Inputs are used only for this comparison.
+                  No sign-up. Inputs are used only for this comparison. 2026
+                  groups by the community the seat was allotted against.
                 </p>
               </form>
             </Card>
@@ -344,7 +345,7 @@ export default async function HomePage() {
           <SectionHeading
             eyebrow="Browse"
             title="Start where you are"
-            description="Jump into the same 450-college record by district or branch. No account needed."
+            description="Jump into the same 478-college record by district or branch. No account needed."
             actions={
               <Link href="/colleges">
                 <Button variant="outline" size="sm" className="gap-1.5">
@@ -471,7 +472,7 @@ export default async function HomePage() {
               Built on the published TNEA record, not opinions.
             </h2>
             <p className="mt-4 max-w-lg text-sm leading-relaxed text-muted-foreground">
-              Cutoff marks from 2020 to 2025, 2025 closing ranks, and seat
+              Cutoff marks from 2020 to 2026, 2025 and 2026 closing ranks, and seat
               allotment records are compiled from published TNEA counselling
               data. We keep the year attached to every number so you can audit
               it.
@@ -479,7 +480,7 @@ export default async function HomePage() {
             <div className="mt-6 flex flex-wrap gap-2">
               {[
                 "Cutoff marks",
-                "2025 closing ranks",
+                "2025 & 2026 closing ranks",
                 "Seat matrix",
                 "Hostel data",
                 "Branch codes",
@@ -502,7 +503,7 @@ export default async function HomePage() {
                 <div>
                   <p className="text-sm font-semibold">What the data covers</p>
                   <p className="text-[11px] text-muted-foreground">
-                    2020 – 2025 counselling years
+                    2020 – 2026 counselling years
                   </p>
                 </div>
               </div>
@@ -514,8 +515,8 @@ export default async function HomePage() {
               {[
                 ["Colleges", formatNumber(stats.colleges)],
                 ["College–branch programmes", formatNumber(stats.collegeBranches)],
-                ["Cutoff marks (2020–2025)", formatNumber(stats.cutoffs)],
-                ["Closing ranks (2025)", formatNumber(stats.generalRanks)],
+                ["Cutoff marks (2020–2026)", formatNumber(stats.cutoffs)],
+                ["Closing ranks (2025 & 2026)", formatNumber(stats.generalRanks)],
                 ["Seat allotment rows", formatNumber(stats.seats)],
                 ["Communities covered", "7"],
               ].map(([label, value]) => (

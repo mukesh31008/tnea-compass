@@ -1,17 +1,23 @@
 import { CUTOFF_YEARS } from "@/lib/tnea";
 
 /**
- * A small server-rendered sparkline for six years of cutoff marks. Missing
- * years break the line instead of being drawn as an invented value.
+ * A small server-rendered sparkline for published cutoff marks. Missing
+ * values break the line instead of being drawn as an invented value. The
+ * labels default to the counselling years, but a 2026 row passes R1–R3 so the
+ * sparkline never mixes allotted-community rounds with candidate-community
+ * year marks.
  */
 export function CutoffSparkline({
   values,
   label,
+  labels = CUTOFF_YEARS,
+  width = 92,
 }: {
   values: (number | null)[];
   label: string;
+  labels?: readonly (string | number)[];
+  width?: number;
 }) {
-  const width = 92;
   const height = 26;
   const padding = 3;
   const step = (width - padding * 2) / Math.max(1, values.length - 1);
@@ -34,7 +40,7 @@ export function CutoffSparkline({
 
   const summary = values
     .map((value, index) =>
-      value === null ? null : `${CUTOFF_YEARS[index]}: ${value.toFixed(1)}`,
+      value === null ? null : `${labels[index] ?? index + 1}: ${value.toFixed(1)}`,
     )
     .filter(Boolean)
     .join(" · ");

@@ -134,7 +134,11 @@ export function CutoffFilters({
           {CUTOFF_YEARS.map((value) => (
             <option key={value} value={value}>
               {value}
-              {value === 2025 ? " (ranks)" : ""}
+              {value === 2025
+                ? " (ranks)"
+                : value === 2026
+                  ? " (allotted community)"
+                  : ""}
             </option>
           ))}
         </FilterSelect>
@@ -183,7 +187,8 @@ export function CutoffFilters({
 
       <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
         <p className="text-[11px] text-muted-foreground">
-          Ranks are published for 2025 only. Earlier years show marks.
+          2020–2025 group by the candidate&apos;s community. 2026 groups by the
+          community the seat was allotted against.
         </p>
         <Button
           variant="ghost"

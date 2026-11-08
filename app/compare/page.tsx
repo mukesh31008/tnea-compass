@@ -26,7 +26,7 @@ import { formatCutoff, formatInr, formatNumber } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Compare colleges",
   description:
-    "Put up to four Tamil Nadu engineering colleges side by side: 2025 cutoffs, seats, hostels and reported fees.",
+    "Put up to four Tamil Nadu engineering colleges side by side: 2026 cutoffs, seats, hostels and reported fees.",
 };
 
 export const dynamic = "force-dynamic";
@@ -86,13 +86,19 @@ function transportLabel(fees: CollegeProfile["fees"]): ReactNode {
   return formatInr(min ?? max);
 }
 
-function seatCell(profile: CollegeProfile, value: number): ReactNode {
-  if (profile.totals.seatRows === 0) return "Not reported";
+function seatCell(
+  profile: CollegeProfile,
+  value: number,
+  year: 2025 | 2026,
+): ReactNode {
+  const rows =
+    year === 2026 ? profile.totals.seatRows2026 : profile.totals.seatRows;
+  if (rows === 0) return "Not reported";
   return (
     <>
       <span className="font-mono">{formatNumber(value)}</span>
       <span className="mt-0.5 block text-[10px] text-muted-foreground">
-        {profile.totals.seatRows} of {profile.totals.branches} programmes
+        {rows} of {profile.totals.branches} programmes
       </span>
     </>
   );
@@ -122,16 +128,19 @@ const OVERVIEW_ROWS: CompareRow[] = [
     ),
   },
   {
-    label: "2025 seats",
-    value: (p) => seatCell(p, p.totals.seats2025),
+    label: "2026 seats",
+    value: (p) => seatCell(p, p.totals.seats2026, 2026),
   },
   {
-    label: "2025 allotted",
-    value: (p) => seatCell(p, p.totals.allotted2025),
+    label: "2026 vacancies",
+    value: (p) =>
+      p.totals.seatRows2026 === 0
+        ? "Not reported"
+        : formatNumber(p.totals.vacancies2026),
   },
   {
-    label: "2025 vacant",
-    value: (p) => seatCell(p, p.totals.vacant2025),
+    label: "2025 seats (context)",
+    value: (p) => seatCell(p, p.totals.seats2025, 2025),
   },
   {
     label: "Boys hostel",
@@ -254,7 +263,7 @@ export default async function ComparePage({
         entry.offers += 1;
         seen.add(key);
       }
-      const oc = branch.cutoffs2025.OC;
+      const oc = branch.cutoffs2026.OC;
       if (oc && oc.mark !== null && oc.mark !== undefined) {
         entry.marks[collegeIndex] = oc.mark;
         entry.ranks[collegeIndex] = oc.rank ?? null;
@@ -287,7 +296,7 @@ export default async function ComparePage({
       <PageHeader
         eyebrow="Compare"
         title="Put the record side by side"
-        description="Compare published 2025 cutoffs, seats, hostels and reported fees for up to four colleges. Nothing is estimated or filled in."
+        description="Compare published 2026 cutoffs, seats, hostels and reported fees for up to four colleges. Nothing is estimated or filled in."
         actions={
           <Badge variant="outline" className="gap-1.5 px-3 py-1.5">
             <GitCompareArrows className="size-3.5 text-primary" />
@@ -372,8 +381,9 @@ export default async function ComparePage({
               <div className="border-b border-border px-5 py-4">
                 <h2 className="text-sm font-semibold">At a glance</h2>
                 <p className="mt-0.5 text-[11px] text-muted-foreground">
-                  Seat totals are the published 2025 allotment matrix. A dash or
-                  “Not reported” is a missing record, never a zero.
+                  Seat totals are the published 2026 matrix. Vacancies are the
+                  post-Round-3 statement. A dash or “Not reported” is a missing
+                  record, never a zero.
                 </p>
               </div>
               <div className="overflow-x-auto">
@@ -497,7 +507,7 @@ export default async function ComparePage({
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-4">
                 <div>
                   <h2 className="text-sm font-semibold">
-                    2025 OC closing marks by{" "}
+                    2026 OC closing marks by{" "}
                     {profiles.length === 1 ? "branch" : "shared branch"}
                   </h2>
                   <p className="mt-0.5 text-[11px] text-muted-foreground">
@@ -515,7 +525,7 @@ export default async function ComparePage({
               {shownBranches.length === 0 ? (
                 <div className="px-5 py-10 text-center">
                   <p className="text-sm text-muted-foreground">
-                    No shared programme has a published 2025 Open category
+                    No shared programme has a published 2026 Open category
                     mark. The overview above still compares the colleges.
                   </p>
                 </div>
@@ -606,7 +616,7 @@ export default async function ComparePage({
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <Info className="size-3.5" />
-                  Ranks are published for 2025 only.
+                  Ranks are published for 2025 and 2026.
                 </span>
               </div>
             </Card>
@@ -621,8 +631,9 @@ export default async function ComparePage({
                   <span className="font-medium text-foreground">
                     Same year, same rule:
                   </span>{" "}
-                  every cutoff is a published 2025 closing mark. Earlier years
-                  are not mixed in.
+                  every cutoff is a published 2026 closing mark, grouped by the
+                  community the seat was allotted against. Earlier years are not
+                  mixed in.
                 </p>
                 <p>
                   <span className="font-medium text-foreground">

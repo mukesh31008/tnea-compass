@@ -28,12 +28,16 @@ import {
   cutoffs,
   fees,
   hostels,
+  roundCutoffs,
   seatMatrix,
+  sourceDocuments,
+  vacancies,
   type College,
   type Fee,
   type Hostel,
+  type SourceDocument,
 } from "@/lib/db/schema";
-import { type Community } from "@/lib/tnea";
+import { CUTOFF_YEARS, type Community } from "@/lib/tnea";
 
 export type YearCount = { year: number; count: number };
 export type TypeCount = { type: string; count: number };
@@ -48,6 +52,9 @@ export type DatasetStats = {
   fees: number;
   districts: number;
   generalRanks: number;
+  roundCutoffs: number;
+  vacancies: number;
+  sourceDocuments: number;
   cutoffYears: YearCount[];
   collegeTypes: TypeCount[];
   fromDatabase: boolean;
@@ -104,6 +111,9 @@ function fallbackStats(): DatasetStats {
     fees: seedManifest.counts.fees,
     districts: seedManifest.districts ?? 0,
     generalRanks: seedManifest.generalRanks,
+    roundCutoffs: seedManifest.counts.roundCutoffs,
+    vacancies: seedManifest.counts.vacancies,
+    sourceDocuments: seedManifest.counts.sourceDocuments,
     cutoffYears: Object.entries(seedManifest.cutoffYears).map(
       ([year, value]) => ({ year: Number(year), count: value }),
     ),
@@ -131,6 +141,9 @@ export async function getDatasetStats(): Promise<DatasetStats> {
       feeCount,
       districtCount,
       rankCount,
+      roundCutoffCount,
+      vacancyCount,
+      sourceDocumentCount,
       cutoffYears,
       collegeTypes,
     ] = await Promise.all([
@@ -149,6 +162,9 @@ export async function getDatasetStats(): Promise<DatasetStats> {
         .select({ value: count(cutoffs.generalRank) })
         .from(cutoffs)
         .where(isNotNull(cutoffs.generalRank)),
+      db.select({ value: count() }).from(roundCutoffs),
+      db.select({ value: count() }).from(vacancies),
+      db.select({ value: count() }).from(sourceDocuments),
       db
         .select({ year: cutoffs.year, count: count() })
         .from(cutoffs)
@@ -171,6 +187,9 @@ export async function getDatasetStats(): Promise<DatasetStats> {
       fees: feeCount[0]?.value ?? 0,
       districts: districtCount[0]?.value ?? 0,
       generalRanks: rankCount[0]?.value ?? 0,
+      roundCutoffs: roundCutoffCount[0]?.value ?? 0,
+      vacancies: vacancyCount[0]?.value ?? 0,
+      sourceDocuments: sourceDocumentCount[0]?.value ?? 0,
       cutoffYears,
       collegeTypes,
       fromDatabase: true,
@@ -360,6 +379,25 @@ export async function getCollege(code: string) {
 export type CommunityCutoff = {
   mark: number | null;
   rank: number | null;
+  rankSuffix: string | null;
+  sourceRound: number | null;
+  sourcePage: number | null;
+};
+
+export type RoundClose = {
+  round: number;
+  mark: number | null;
+  rank: number | null;
+  rankSuffix: string | null;
+  /** Round in which the last-ranked candidate was actually allotted. */
+  sourceRound: number | null;
+  sourcePage: number | null;
+};
+
+export type SeatSummary = {
+  totalSeats: number;
+  allotted: number | null;
+  vacant: number | null;
 };
 
 export type CollegeProfileBranch = {
@@ -370,12 +408,15 @@ export type CollegeProfileBranch = {
   yearStarted: number | null;
   nba: boolean | null;
   nbaValidUpto: number | null;
-  seats: {
-    totalSeats: number;
-    allotted: number | null;
-    vacant: number | null;
-  } | null;
+  /** 2025 seat row, kept as `seats` for older callers. */
+  seats: SeatSummary | null;
+  seats2025: SeatSummary | null;
+  seats2026: SeatSummary | null;
+  vacancies2026: number | null;
   cutoffs2025: Partial<Record<Community, CommunityCutoff>>;
+  cutoffs2026: Partial<Record<Community, CommunityCutoff>>;
+  /** Cumulative close after each 2026 round, grouped by allotted community. */
+  rounds2026: Partial<Record<Community, RoundClose[]>>;
   ocHistory: Partial<Record<number, number | null>>;
 };
 
@@ -390,10 +431,16 @@ export type CollegeProfile = {
     seats2025: number;
     allotted2025: number;
     vacant2025: number;
+    seatRows2026: number;
+    seats2026: number;
+    vacancies2026: number;
   };
 };
 
-/** A college profile with 2025 cutoffs, seats and OC mark history. */
+/**
+ * A college profile with 2026 and 2025 closes, both seat years and the
+ * per-round 2026 timeline. Every 2026 value keeps its source page and round.
+ */
 export async function getCollegeProfile(
   code: string,
 ): Promise<CollegeProfile | null> {
@@ -409,66 +456,160 @@ export async function getCollegeProfile(
       yearStarted: collegeBranches.yearStarted,
       nba: collegeBranches.nba,
       nbaValidUpto: collegeBranches.nbaValidUpto,
-      totalSeats: seatMatrix.totalSeats,
-      allotted: seatMatrix.allotted,
-      vacant: seatMatrix.vacant,
     })
     .from(collegeBranches)
-    .leftJoin(
-      seatMatrix,
-      and(
-        eq(seatMatrix.collegeBranchId, collegeBranches.id),
-        eq(seatMatrix.year, 2025),
-      ),
-    )
     .where(eq(collegeBranches.collegeCode, code))
     .orderBy(asc(collegeBranches.branchName), asc(collegeBranches.branchCode));
 
   const ids = branchRows.map((row) => row.id);
-  const cutoffRows =
+  const [cutoffRows, roundRows, seatRows, vacancyRows] =
     ids.length > 0
-      ? await db
-          .select({
-            collegeBranchId: cutoffs.collegeBranchId,
-            year: cutoffs.year,
-            community: cutoffs.community,
-            cutoffMark: cutoffs.cutoffMark,
-            generalRank: cutoffs.generalRank,
-          })
-          .from(cutoffs)
-          .where(
-            and(
-              inArray(cutoffs.collegeBranchId, ids),
-              gte(cutoffs.year, 2020),
+      ? await Promise.all([
+          db
+            .select({
+              collegeBranchId: cutoffs.collegeBranchId,
+              year: cutoffs.year,
+              community: cutoffs.community,
+              cutoffMark: cutoffs.cutoffMark,
+              generalRank: cutoffs.generalRank,
+              rankSuffix: cutoffs.rankSuffix,
+              sourceRound: cutoffs.sourceRound,
+              sourcePage: cutoffs.sourcePage,
+            })
+            .from(cutoffs)
+            .where(
+              and(
+                inArray(cutoffs.collegeBranchId, ids),
+                gte(cutoffs.year, 2020),
+              ),
             ),
-          )
-      : [];
+          db
+            .select({
+              collegeBranchId: roundCutoffs.collegeBranchId,
+              community: roundCutoffs.community,
+              round: roundCutoffs.round,
+              cutoffMark: roundCutoffs.cutoffMark,
+              generalRank: roundCutoffs.generalRank,
+              rankSuffix: roundCutoffs.rankSuffix,
+              sourceRound: roundCutoffs.sourceRound,
+              sourcePage: roundCutoffs.sourcePage,
+            })
+            .from(roundCutoffs)
+            .where(
+              and(
+                inArray(roundCutoffs.collegeBranchId, ids),
+                eq(roundCutoffs.year, 2026),
+              ),
+            )
+            .orderBy(asc(roundCutoffs.round)),
+          db
+            .select({
+              collegeBranchId: seatMatrix.collegeBranchId,
+              year: seatMatrix.year,
+              totalSeats: seatMatrix.totalSeats,
+              allotted: seatMatrix.allotted,
+              vacant: seatMatrix.vacant,
+            })
+            .from(seatMatrix)
+            .where(
+              and(
+                inArray(seatMatrix.collegeBranchId, ids),
+                inArray(seatMatrix.year, [2025, 2026]),
+              ),
+            ),
+          db
+            .select({
+              collegeBranchId: vacancies.collegeBranchId,
+              vacantSeats: vacancies.vacantSeats,
+            })
+            .from(vacancies)
+            .where(
+              and(
+                inArray(vacancies.collegeBranchId, ids),
+                eq(vacancies.year, 2026),
+              ),
+            ),
+        ])
+      : [[], [], [], []];
 
   const byBranch = new Map<
     number,
     {
+      seats2025: SeatSummary | null;
+      seats2026: SeatSummary | null;
+      vacancies2026: number | null;
       cutoffs2025: Partial<Record<Community, CommunityCutoff>>;
+      cutoffs2026: Partial<Record<Community, CommunityCutoff>>;
+      rounds2026: Partial<Record<Community, RoundClose[]>>;
       ocHistory: Partial<Record<number, number | null>>;
     }
   >();
 
   for (const row of branchRows) {
-    byBranch.set(row.id, { cutoffs2025: {}, ocHistory: {} });
+    byBranch.set(row.id, {
+      seats2025: null,
+      seats2026: null,
+      vacancies2026: null,
+      cutoffs2025: {},
+      cutoffs2026: {},
+      rounds2026: {},
+      ocHistory: {},
+    });
   }
 
   for (const row of cutoffRows) {
     const entry = byBranch.get(row.collegeBranchId);
     if (!entry) continue;
 
+    const value: CommunityCutoff = {
+      mark: row.cutoffMark,
+      rank: row.generalRank,
+      rankSuffix: row.rankSuffix,
+      sourceRound: row.sourceRound,
+      sourcePage: row.sourcePage,
+    };
     if (row.year === 2025) {
-      entry.cutoffs2025[row.community as Community] = {
-        mark: row.cutoffMark,
-        rank: row.generalRank,
-      };
+      entry.cutoffs2025[row.community as Community] = value;
+    } else if (row.year === 2026) {
+      entry.cutoffs2026[row.community as Community] = value;
     }
     if (row.community === "OC") {
       entry.ocHistory[row.year] = row.cutoffMark;
     }
+  }
+
+  for (const row of roundRows) {
+    const entry = byBranch.get(row.collegeBranchId);
+    if (!entry) continue;
+    const community = row.community as Community;
+    const list = entry.rounds2026[community] ?? [];
+    list.push({
+      round: row.round,
+      mark: row.cutoffMark,
+      rank: row.generalRank,
+      rankSuffix: row.rankSuffix,
+      sourceRound: row.sourceRound,
+      sourcePage: row.sourcePage,
+    });
+    entry.rounds2026[community] = list;
+  }
+
+  for (const row of seatRows) {
+    const entry = byBranch.get(row.collegeBranchId);
+    if (!entry) continue;
+    const summary: SeatSummary = {
+      totalSeats: row.totalSeats,
+      allotted: row.allotted,
+      vacant: row.vacant,
+    };
+    if (row.year === 2025) entry.seats2025 = summary;
+    if (row.year === 2026) entry.seats2026 = summary;
+  }
+
+  for (const row of vacancyRows) {
+    const entry = byBranch.get(row.collegeBranchId);
+    if (!entry) continue;
+    entry.vacancies2026 = (entry.vacancies2026 ?? 0) + row.vacantSeats;
   }
 
   const profileBranches: CollegeProfileBranch[] = branchRows.map((row) => {
@@ -481,35 +622,53 @@ export async function getCollegeProfile(
       yearStarted: row.yearStarted,
       nba: row.nba,
       nbaValidUpto: row.nbaValidUpto,
-      seats:
-        row.totalSeats === null
-          ? null
-          : {
-              totalSeats: row.totalSeats,
-              allotted: row.allotted,
-              vacant: row.vacant,
-            },
+      seats: entry?.seats2025 ?? null,
+      seats2025: entry?.seats2025 ?? null,
+      seats2026: entry?.seats2026 ?? null,
+      vacancies2026: entry?.vacancies2026 ?? null,
       cutoffs2025: entry?.cutoffs2025 ?? {},
+      cutoffs2026: entry?.cutoffs2026 ?? {},
+      rounds2026: entry?.rounds2026 ?? {},
       ocHistory: entry?.ocHistory ?? {},
     };
   });
 
-  const seats = profileBranches
-    .map((branch) => branch.seats)
-    .filter((row): row is NonNullable<typeof row> => row !== null);
+  const seats2025 = profileBranches
+    .map((branch) => branch.seats2025)
+    .filter((row): row is SeatSummary => row !== null);
+  const seats2026 = profileBranches
+    .map((branch) => branch.seats2026)
+    .filter((row): row is SeatSummary => row !== null);
 
   return {
     ...collegeData,
     branches: profileBranches,
     totals: {
       branches: profileBranches.length,
-      seatRows: seats.length,
-      seats2025: seats.reduce((sum, row) => sum + row.totalSeats, 0),
-      allotted2025: seats.reduce((sum, row) => sum + (row.allotted ?? 0), 0),
-      vacant2025: seats.reduce((sum, row) => sum + (row.vacant ?? 0), 0),
+      seatRows: seats2025.length,
+      seats2025: seats2025.reduce((sum, row) => sum + row.totalSeats, 0),
+      allotted2025: seats2025.reduce(
+        (sum, row) => sum + (row.allotted ?? 0),
+        0,
+      ),
+      vacant2025: seats2025.reduce((sum, row) => sum + (row.vacant ?? 0), 0),
+      seatRows2026: seats2026.length,
+      seats2026: seats2026.reduce((sum, row) => sum + row.totalSeats, 0),
+      vacancies2026: profileBranches.reduce(
+        (sum, row) => sum + (row.vacancies2026 ?? 0),
+        0,
+      ),
     },
   };
 }
+
+export type CutoffRound = {
+  round: number;
+  mark: number | null;
+  rank: number | null;
+  sourceRound: number | null;
+  sourcePage: number | null;
+};
 
 export type CutoffExplorerRow = {
   collegeBranchId: number;
@@ -522,7 +681,10 @@ export type CutoffExplorerRow = {
   branchName: string;
   mark: number | null;
   rank: number | null;
+  sourceRound: number | null;
+  sourcePage: number | null;
   history: (number | null)[];
+  rounds: CutoffRound[];
 };
 
 export type CutoffExplorerResult = {
@@ -530,6 +692,8 @@ export type CutoffExplorerResult = {
   total: number;
   page: number;
   pages: number;
+  /** 2026 groups the close by the community the seat was allotted against. */
+  communityBasis: "candidate" | "allotted";
   summary: {
     highest: number | null;
     average: number | null;
@@ -549,7 +713,9 @@ export type CutoffExplorerParams = {
 
 /**
  * Browse one year/community's closing marks, sorted high to low. Each row
- * carries that programme's six-year mark history for the same community.
+ * carries that programme's mark history for the same community. For 2026 the
+ * rows also carry the cumulative R1–R3 close, which is the only honest
+ * year-on-year comparison for the allotted-community grouping.
  */
 export async function getCutoffExplorer(
   params: CutoffExplorerParams,
@@ -595,6 +761,8 @@ export async function getCutoffExplorer(
       branchName: collegeBranches.branchName,
       mark: cutoffs.cutoffMark,
       rank: cutoffs.generalRank,
+      sourceRound: cutoffs.sourceRound,
+      sourcePage: cutoffs.sourcePage,
     })
     .from(cutoffs)
     .innerJoin(
@@ -638,9 +806,9 @@ export async function getCutoffExplorer(
   ]);
 
   const ids = rows.map((row) => row.collegeBranchId);
-  const historyRows =
+  const [historyRows, roundRows] = await Promise.all([
     ids.length > 0
-      ? await db
+      ? db
           .select({
             collegeBranchId: cutoffs.collegeBranchId,
             year: cutoffs.year,
@@ -651,20 +819,59 @@ export async function getCutoffExplorer(
             and(
               inArray(cutoffs.collegeBranchId, ids),
               eq(cutoffs.community, params.community),
-              gte(cutoffs.year, 2020),
+              gte(cutoffs.year, CUTOFF_YEARS[0]),
+              // 2026 is grouped by allotted community, so it is never drawn
+              // on the candidate-community year line.
+              params.year === 2026
+                ? eq(cutoffs.year, 2026)
+                : sql`${cutoffs.year} < 2026`,
             ),
           )
-      : [];
+      : Promise.resolve([]),
+    ids.length > 0 && params.year === 2026
+      ? db
+          .select({
+            collegeBranchId: roundCutoffs.collegeBranchId,
+            round: roundCutoffs.round,
+            cutoffMark: roundCutoffs.cutoffMark,
+            generalRank: roundCutoffs.generalRank,
+            sourceRound: roundCutoffs.sourceRound,
+            sourcePage: roundCutoffs.sourcePage,
+          })
+          .from(roundCutoffs)
+          .where(
+            and(
+              inArray(roundCutoffs.collegeBranchId, ids),
+              eq(roundCutoffs.year, 2026),
+              eq(roundCutoffs.community, params.community),
+            ),
+          )
+          .orderBy(asc(roundCutoffs.round))
+      : Promise.resolve([]),
+  ]);
 
   const histories = new Map<number, (number | null)[]>();
-  for (const id of ids) histories.set(id, Array(6).fill(null));
+  for (const id of ids) histories.set(id, Array(CUTOFF_YEARS.length).fill(null));
   for (const row of historyRows) {
     const history = histories.get(row.collegeBranchId);
     if (!history) continue;
-    const index = row.year - 2020;
+    const index = row.year - CUTOFF_YEARS[0];
     if (index >= 0 && index < history.length) {
       history[index] = row.cutoffMark;
     }
+  }
+
+  const roundsByBranch = new Map<number, CutoffRound[]>();
+  for (const row of roundRows) {
+    const list = roundsByBranch.get(row.collegeBranchId) ?? [];
+    list.push({
+      round: row.round,
+      mark: row.cutoffMark,
+      rank: row.generalRank,
+      sourceRound: row.sourceRound,
+      sourcePage: row.sourcePage,
+    });
+    roundsByBranch.set(row.collegeBranchId, list);
   }
 
   const total = totalRows[0]?.value ?? 0;
@@ -673,11 +880,15 @@ export async function getCutoffExplorer(
   return {
     rows: rows.map((row) => ({
       ...row,
-      history: histories.get(row.collegeBranchId) ?? Array(6).fill(null),
+      history:
+        histories.get(row.collegeBranchId) ??
+        Array(CUTOFF_YEARS.length).fill(null),
+      rounds: roundsByBranch.get(row.collegeBranchId) ?? [],
     })),
     total,
     page,
     pages: Math.max(1, Math.ceil(total / limit)),
+    communityBasis: params.year === 2026 ? "allotted" : "candidate",
     summary: {
       highest: summary?.highest ?? null,
       average:
@@ -700,19 +911,24 @@ export type PredictorCandidate = {
   branchName: string;
   mark: number | null;
   rank: number | null;
+  sourceRound: number | null;
+  sourcePage: number | null;
 };
 
 /**
- * Every 2025 programme result for one community, optionally narrowed to a
- * branch or district. The prediction bands are applied in the UI layer.
+ * Every programme result for one community and comparison year, optionally
+ * narrowed to a branch or district. The position bands are applied in the UI
+ * layer. The 2026 close is grouped by the community the seat was allotted
+ * against, so it must never be described as a candidate-community cutoff.
  */
 export async function getPredictorCandidates(params: {
   community: Community;
   branch?: string;
   district?: string;
+  year?: number;
 }): Promise<PredictorCandidate[]> {
   const conditions: SQL[] = [
-    eq(cutoffs.year, 2025),
+    eq(cutoffs.year, params.year ?? 2026),
     eq(cutoffs.community, params.community),
     isNotNull(cutoffs.cutoffMark),
     isNotNull(cutoffs.generalRank),
@@ -737,6 +953,8 @@ export async function getPredictorCandidates(params: {
       branchName: collegeBranches.branchName,
       mark: cutoffs.cutoffMark,
       rank: cutoffs.generalRank,
+      sourceRound: cutoffs.sourceRound,
+      sourcePage: cutoffs.sourcePage,
     })
     .from(cutoffs)
     .innerJoin(
@@ -781,4 +999,19 @@ export async function getCompareSuggestions(
     .where(isNotNull(colleges.shortName))
     .orderBy(desc(branchCount), asc(colleges.code))
     .limit(Math.min(Math.max(Math.floor(limit), 1), 12));
+}
+
+/**
+ * The official documents that every 2026 public fact points back to. Ordered
+ * by round, then by document type, so the provenance page reads like a ledger.
+ */
+export async function getSourceDocuments(): Promise<SourceDocument[]> {
+  return db
+    .select()
+    .from(sourceDocuments)
+    .orderBy(
+      asc(sourceDocuments.year),
+      asc(sourceDocuments.round),
+      asc(sourceDocuments.documentType),
+    );
 }

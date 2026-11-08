@@ -29,7 +29,16 @@ export const COLLEGE_TYPES = [
 
 export type CollegeType = (typeof COLLEGE_TYPES)[number];
 
-export const CUTOFF_YEARS = [2020, 2021, 2022, 2023, 2024, 2025] as const;
+export const CUTOFF_YEARS = [2020, 2021, 2022, 2023, 2024, 2025, 2026] as const;
+
+/** Years with a published closing rank. 2026 is grouped by allotted community. */
+export const RANK_YEARS = [2025, 2026] as const;
+
+export type RankYear = (typeof RANK_YEARS)[number];
+
+export function isRankYear(value: number): value is RankYear {
+  return (RANK_YEARS as readonly number[]).includes(value);
+}
 
 export function isCommunity(value: string): value is Community {
   return (COMMUNITIES as readonly string[]).includes(value);

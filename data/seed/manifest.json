@@ -1,21 +1,29 @@
 {
-  "generatedAt": "2026-11-06T13:05:53.619720+00:00",
-  "source": "Original TNEA imports: 2023 college/branch/hostel/fee/facility exports, 2020-2025 cutoff export, 2025 rank export, and the Information_about_colleges PDF text.",
+  "generatedAt": "2026-11-07",
+  "source": "Original TNEA imports for 2020–2025, plus the official TNEA 2026 allotment lists, seat matrix, post-Round-3 vacancy statement and college directory published at static.tneaonline.org.",
   "notes": [
-    "Closing ranks are stored for 2025 only. The archived 2024 per-year file is an exact duplicate of 2025, so its ranks are not used.",
-    "2020-2024 cutoff marks come from the all-years export after dropping rank-like values above 200 and keeping the highest mark per key.",
+    "2026 closing values are the last-ranked allotment in the union of Rounds 1–3, grouped by the community against which the seat was allotted.",
+    "2026 closing ranks are stored with the round and PDF page of the last-ranked allotment; the final close is the Round 3 cumulative close.",
+    "Round cutoff rows are cumulative: round 2 includes round 1, and round 3 includes rounds 1 and 2.",
+    "2026 seat totals come from the official seat matrix; allotted seats are left null because the matrix does not report them.",
+    "2026 vacancies are the official post-Round-3 vacancy statement, split by community.",
+    "Closing ranks are stored for 2025 and 2026 only. The archived 2024 per-year rank export is an exact duplicate of 2025, so its ranks are not used.",
+    "2020–2024 cutoff marks come from the all-years export after dropping rank-like values above 200 and keeping the highest mark per key.",
     "The 2025 PERI (1452) AI and Machine Learning ranks are patched from the archived college page; the source reused the Artificial Intelligence programme's ranks.",
     "Establishment fee is the reported hostel establishment charge, not tuition or a total annual hostel cost.",
     "Missing values are null and are rendered as 'Not reported'."
   ],
   "counts": {
-    "colleges": 450,
-    "branches": 122,
-    "collegeBranches": 3756,
-    "cutoffs": 63454,
-    "seatMatrix": 18900,
+    "colleges": 478,
+    "branches": 134,
+    "collegeBranches": 4045,
+    "cutoffs": 77798,
+    "seatMatrix": 22254,
     "hostels": 444,
-    "fees": 444
+    "fees": 444,
+    "roundCutoffs": 24692,
+    "vacancies": 24276,
+    "sourceDocuments": 6
   },
   "cutoffYears": {
     "2020": 7314,
@@ -23,14 +31,15 @@
     "2022": 9900,
     "2023": 11104,
     "2024": 11778,
-    "2025": 14719
+    "2025": 14719,
+    "2026": 14344
   },
   "collegeTypes": {
     "Government": 11,
-    "Government Aided": 21,
-    "Self-Financing": 413,
+    "Government Aided": 22,
+    "Self-Financing": 440,
     "University Department": 5
   },
   "districts": 39,
-  "generalRanks": 14719
+  "generalRanks": 29063
 }

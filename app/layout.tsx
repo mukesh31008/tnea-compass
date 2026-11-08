@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     template: "%s · TNEA Compass",
   },
   description:
-    "An independent, data-first guide to Tamil Nadu engineering admissions. Explore 450 colleges, six years of TNEA cutoffs, seat data, and build a choice list you can defend.",
+    "An independent, data-first guide to Tamil Nadu engineering admissions. Explore 478 colleges, seven years of TNEA cutoffs, seat data, and build a choice list you can defend.",
   keywords: [
     "TNEA",
     "Tamil Nadu engineering admissions",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "TNEA Compass — Find the college that fits your rank",
     description:
-      "Explore 450 Tamil Nadu engineering colleges, six years of cutoffs, and build a smarter choice list.",
+      "Explore 478 Tamil Nadu engineering colleges, seven years of cutoffs, and build a smarter choice list.",
     type: "website",
     locale: "en_IN",
     siteName: "TNEA Compass",
