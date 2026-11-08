@@ -7,6 +7,24 @@ import * as schema from "@/lib/db/schema";
 const fallbackSecret =
   "tnea-compass-local-development-secret-do-not-use-in-production";
 
+/**
+ * A production process without BETTER_AUTH_SECRET gets an unguessable
+ * per-process secret instead of a known fallback. Sessions then do not survive
+ * a restart or span instances, which is a loud operational failure rather than
+ * a forgeable one. Set the env var in every real deployment.
+ */
+const secret =
+  process.env.BETTER_AUTH_SECRET ??
+  (process.env.NODE_ENV === "production"
+    ? `${crypto.randomUUID()}${crypto.randomUUID()}`
+    : fallbackSecret);
+
+if (process.env.NODE_ENV === "production" && !process.env.BETTER_AUTH_SECRET) {
+  console.warn(
+    "BETTER_AUTH_SECRET is not set. Using a per-process secret; sessions will not survive a restart.",
+  );
+}
+
 const siteUrl =
   process.env.BETTER_AUTH_URL ??
   process.env.NEXT_PUBLIC_SITE_URL ??
@@ -23,7 +41,7 @@ const siteUrl =
 export const auth = betterAuth({
   appName: "TNEA Compass",
   baseURL: siteUrl,
-  secret: process.env.BETTER_AUTH_SECRET ?? fallbackSecret,
+  secret,
   database: drizzleAdapter(db, {
     provider: "sqlite",
     schema,
