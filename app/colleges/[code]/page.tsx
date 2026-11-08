@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Bus,
+  ClipboardPlus,
   GraduationCap,
   Home,
   Info,
@@ -257,24 +258,41 @@ export default async function CollegeProfilePage({
                             const close =
                               branch.cutoffs2026.OC ?? branch.cutoffs2025.OC;
                             const year = branch.cutoffs2026.OC ? 2026 : 2025;
+                            const trackHref = `/tracker/applications?${new URLSearchParams(
+                              {
+                                collegeCode: college.code,
+                                collegeName: college.name,
+                                branchCode: branch.branchCode,
+                                branchName: branch.branchName,
+                              },
+                            ).toString()}`;
                             return (
-                              <AddToChoice
-                                iconOnly
-                                input={{
-                                  id: branch.id,
-                                  collegeCode: college.code,
-                                  collegeName: college.name,
-                                  collegeShortName: college.shortName,
-                                  district: college.district,
-                                  type: college.type,
-                                  branchCode: branch.branchCode,
-                                  branchName: branch.branchName,
-                                  community: "OC",
-                                  dataYear: year,
-                                  cutoffMark: close?.mark ?? null,
-                                  rank: close?.rank ?? null,
-                                }}
-                              />
+                              <div className="flex items-center justify-end gap-1">
+                                <Link
+                                  href={trackHref}
+                                  aria-label={`Track an application for ${branch.branchName}`}
+                                  className="grid size-8 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
+                                >
+                                  <ClipboardPlus className="size-3.5" />
+                                </Link>
+                                <AddToChoice
+                                  iconOnly
+                                  input={{
+                                    id: branch.id,
+                                    collegeCode: college.code,
+                                    collegeName: college.name,
+                                    collegeShortName: college.shortName,
+                                    district: college.district,
+                                    type: college.type,
+                                    branchCode: branch.branchCode,
+                                    branchName: branch.branchName,
+                                    community: "OC",
+                                    dataYear: year,
+                                    cutoffMark: close?.mark ?? null,
+                                    rank: close?.rank ?? null,
+                                  }}
+                                />
+                              </div>
                             );
                           })()}
                         </td>
@@ -283,7 +301,7 @@ export default async function CollegeProfilePage({
                   </tbody>
                 </table>
               </div>
-              {totals.seatRows < totals.branches && (
+              {totals.seatRows2026 < totals.branches && (
                 <p className="border-t border-border px-5 py-3 text-[11px] leading-relaxed text-muted-foreground">
                   {totals.branches - totals.seatRows2026} of{" "}
                   {totals.branches} programmes have no 2026 seat row and are

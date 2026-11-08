@@ -158,6 +158,37 @@ export default async function AboutPage() {
           </div>
         </div>
 
+        <div id="privacy" className="mt-12 scroll-mt-24">
+          <h2 className="display text-2xl sm:text-3xl">Your account, your data</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            The public tools are usable without an account. An account only
+            stores the planning record you type, and only you can read it.
+          </p>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            {[
+              {
+                title: "What is stored",
+                body: "Email, a password hash, an optional profile, subject marks, exams and applications. No Aadhaar, date of birth, photo, uploaded certificate or public profile.",
+              },
+              {
+                title: "Who can read it",
+                body: "Only the signed-in account. Every tracker query is filtered by the session user, and the export route refuses to run without a session.",
+              },
+              {
+                title: "How to leave",
+                body: "Download a JSON copy from the dashboard, then delete the account. Profile, marks, exams and applications are removed explicitly; the local choice list is browser-only.",
+              },
+            ].map((item) => (
+              <Card key={item.title} className="p-5">
+                <h3 className="text-sm font-semibold">{item.title}</h3>
+                <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
+                  {item.body}
+                </p>
+              </Card>
+            ))}
+          </div>
+        </div>
+
         <div id="disclaimer" className="mt-12 scroll-mt-24">
           <Card className="border-primary/20 bg-accent/30 p-6">
             <h2 className="flex items-center gap-2 text-sm font-semibold">

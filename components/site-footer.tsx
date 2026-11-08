@@ -16,15 +16,17 @@ const COLUMNS = [
     title: "Build",
     links: [
       { label: "Choice list", href: "/choices" },
-      { label: "Saved colleges", href: "/dashboard" },
-      { label: "Assistant", href: "/assistant" },
+      { label: "Dashboard", href: "/dashboard" },
+      { label: "Academic tracker", href: "/tracker/academic" },
     ],
   },
   {
     title: "About",
     links: [
+      { label: "Admission pathways", href: "/pathways" },
       { label: "Methodology", href: "/about#method" },
       { label: "Data provenance", href: "/about#data" },
+      { label: "Privacy", href: "/about#privacy" },
       { label: "Disclaimer", href: "/about#disclaimer" },
     ],
   },

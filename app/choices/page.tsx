@@ -54,10 +54,10 @@ export default function ChoicesPage() {
             </p>
             <p>
               <span className="font-medium text-foreground">
-                It uses 2025 Open category data:
+                It uses one published close per entry:
               </span>{" "}
-              the mark and rank shown are a snapshot for OC. Other communities
-              can have different closing values.
+              each saved choice records the year and the community used. A 2026
+              entry is grouped by the community the seat was allotted against.
             </p>
             <p>
               <span className="font-medium text-foreground">

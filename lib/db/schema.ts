@@ -369,3 +369,235 @@ export type Vacancy = typeof vacancies.$inferSelect;
 export type SourceDocument = typeof sourceDocuments.$inferSelect;
 export type Hostel = typeof hostels.$inferSelect;
 export type Fee = typeof fees.$inferSelect;
+
+/* ------------------------------------------------------------------ */
+/* Accounts and private tracker                                       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Better Auth core tables. Profile facts live in `student_profiles` so the
+ * authentication record stays minimal: an id, a name, an email and a session.
+ */
+export const user = sqliteTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: integer("email_verified", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  image: text("image"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+});
+
+export const session = sqliteTable(
+  "session",
+  {
+    id: text("id").primaryKey(),
+    expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+    token: text("token").notNull().unique(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+  },
+  (table) => [index("session_user_id_idx").on(table.userId)],
+);
+
+export const account = sqliteTable(
+  "account",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: integer("access_token_expires_at", {
+      mode: "timestamp",
+    }),
+    refreshTokenExpiresAt: integer("refresh_token_expires_at", {
+      mode: "timestamp",
+    }),
+    scope: text("scope"),
+    password: text("password"),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [index("account_user_id_idx").on(table.userId)],
+);
+
+export const verification = sqliteTable(
+  "verification",
+  {
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [index("verification_identifier_idx").on(table.identifier)],
+);
+
+/**
+ * Private student profile. Every field is optional except the owner link; a
+ * student can use the trackers without disclosing school or community.
+ */
+export const studentProfiles = sqliteTable("student_profiles", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  displayName: text("display_name"),
+  phone: text("phone"),
+  district: text("district"),
+  schoolName: text("school_name"),
+  schoolType: text("school_type"),
+  medium: text("medium"),
+  community: text("community"),
+  gender: text("gender"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+});
+
+/**
+ * One subject mark for one class level. These are user-entered values and are
+ * never mixed with the official cutoff tables.
+ */
+export const academicRecords = sqliteTable(
+  "academic_records",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    classLevel: integer("class_level").notNull(),
+    subject: text("subject").notNull(),
+    mark: real("mark").notNull(),
+    maxMark: real("max_mark").notNull(),
+    examBoard: text("exam_board"),
+    notes: text("notes"),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [
+    uniqueIndex("academic_records_owner_subject_idx").on(
+      table.userId,
+      table.classLevel,
+      table.subject,
+    ),
+  ],
+);
+
+/** Entrance or school exams the student plans to take or has taken. */
+export const examRecords = sqliteTable(
+  "exam_records",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    category: text("category").notNull(),
+    examDate: text("exam_date"),
+    status: text("status").notNull(),
+    score: real("score"),
+    rank: integer("rank"),
+    notes: text("notes"),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [index("exam_records_user_idx").on(table.userId)],
+);
+
+/**
+ * A private application/counselling tracker. It is separate from the public
+ * choice list: a saved choice is an option, an application is a decision the
+ * student is actually pursuing.
+ */
+export const applications = sqliteTable(
+  "applications",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    collegeCode: text("college_code").notNull(),
+    collegeName: text("college_name").notNull(),
+    branchCode: text("branch_code").notNull().default(""),
+    branchName: text("branch_name"),
+    stage: text("stage").notNull(),
+    priority: integer("priority").notNull().default(1),
+    counsellingYear: integer("counselling_year").notNull(),
+    round: integer("round"),
+    notes: text("notes"),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [
+    uniqueIndex("applications_owner_programme_idx").on(
+      table.userId,
+      table.collegeCode,
+      table.branchCode,
+    ),
+    index("applications_user_idx").on(table.userId),
+  ],
+);
+
+export const userRelations = relations(user, ({ one, many }) => ({
+  profile: one(studentProfiles, {
+    fields: [user.id],
+    references: [studentProfiles.userId],
+  }),
+  academicRecords: many(academicRecords),
+  examRecords: many(examRecords),
+  applications: many(applications),
+  sessions: many(session),
+  accounts: many(account),
+}));
+
+export const studentProfilesRelations = relations(
+  studentProfiles,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [studentProfiles.userId],
+      references: [user.id],
+    }),
+  }),
+);
+
+export const academicRecordsRelations = relations(
+  academicRecords,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [academicRecords.userId],
+      references: [user.id],
+    }),
+  }),
+);
+
+export const examRecordsRelations = relations(examRecords, ({ one }) => ({
+  user: one(user, {
+    fields: [examRecords.userId],
+    references: [user.id],
+  }),
+}));
+
+export const applicationsRelations = relations(applications, ({ one }) => ({
+  user: one(user, {
+    fields: [applications.userId],
+    references: [user.id],
+  }),
+}));
+
+export type User = typeof user.$inferSelect;
+export type StudentProfile = typeof studentProfiles.$inferSelect;
+export type AcademicRecord = typeof academicRecords.$inferSelect;
+export type ExamRecord = typeof examRecords.$inferSelect;
+export type Application = typeof applications.$inferSelect;

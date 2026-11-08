@@ -17,6 +17,10 @@ const client =
     authToken,
   });
 
+// Best-effort for local SQLite. Account deletion also removes child rows
+// explicitly, so it does not depend on this pragma being applied first.
+void client.execute("PRAGMA foreign_keys = ON").catch(() => undefined);
+
 if (process.env.NODE_ENV !== "production") {
   globalForDb.__tneaDbClient = client;
 }

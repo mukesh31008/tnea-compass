@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, Search } from "lucide-react";
+import { AccountMenu } from "@/components/account-menu";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -96,11 +97,7 @@ export function SiteHeader() {
             </kbd>
           </button>
           <ThemeToggle />
-          <Link href="/sign-in" className="hidden sm:block">
-            <Button variant="ghost" size="sm" className="text-muted-foreground">
-              Sign in
-            </Button>
-          </Link>
+          <AccountMenu />
           <Link href="/predictor" className="hidden sm:block">
             <Button size="sm" className="gap-1.5">
               Where I stand
@@ -147,10 +144,16 @@ export function SiteHeader() {
                   );
                 })}
                 <Link
-                  href="/assistant"
+                  href="/pathways"
                   className="rounded-lg px-3 py-2.5 text-[15px] font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                 >
-                  Assistant
+                  Pathways
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="rounded-lg px-3 py-2.5 text-[15px] font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                >
+                  Dashboard
                 </Link>
                 <Link
                   href="/about"
@@ -162,7 +165,7 @@ export function SiteHeader() {
               <div className="mt-auto flex flex-col gap-2">
                 <Link href="/sign-in">
                   <Button variant="outline" className="w-full">
-                    Sign in
+                    Account
                   </Button>
                 </Link>
                 <Link href="/predictor">
