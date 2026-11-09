@@ -71,6 +71,13 @@ export type BranchOption = {
   colleges: number;
 };
 
+export type CollegeOption = {
+  code: string;
+  name: string;
+  shortName: string | null;
+  district: string | null;
+};
+
 export type CollegeHit = {
   code: string;
   name: string;
@@ -232,6 +239,22 @@ export async function getBranchOptions(): Promise<BranchOption[]> {
     .orderBy(desc(count(collegeBranches.id)), asc(branches.name));
 
   return rows;
+}
+
+/**
+ * A compact college list for the assistant picker. It is a lookup list, not a
+ * ranking: the order is the official TNEA code.
+ */
+export async function getCollegeOptions(): Promise<CollegeOption[]> {
+  return db
+    .select({
+      code: colleges.code,
+      name: colleges.name,
+      shortName: colleges.shortName,
+      district: colleges.district,
+    })
+    .from(colleges)
+    .orderBy(asc(colleges.code));
 }
 
 /**

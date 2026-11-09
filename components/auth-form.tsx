@@ -132,6 +132,17 @@ export function AuthForm({ next }: { next: string }) {
           />
         </label>
 
+        {mode === "sign-in" && (
+          <div className="-mt-1 text-right">
+            <Link
+              href="/forgot-password"
+              className="text-[11.5px] font-medium text-primary hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
+        )}
+
         {error && (
           <p
             role="alert"

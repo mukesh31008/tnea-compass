@@ -29,11 +29,28 @@ import {
 } from "@/lib/tnea";
 import { cn, formatCutoff, formatNumber } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Cutoff trends",
-  description:
-    "Browse published TNEA cutoff marks from 2020 to 2026, with 2025 and 2026 closing ranks, by branch, community, district and college.",
-};
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}): Promise<Metadata> {
+  const params = await searchParams;
+  const hasFilter = ["year", "community", "branch", "district", "q", "page"].some(
+    (key) => Boolean(first(params[key])),
+  );
+
+  return {
+    title: hasFilter ? "Filtered cutoff reading" : "Cutoff trends",
+    description:
+      "Browse published TNEA cutoff marks from 2020 to 2026, with 2025 and 2026 closing ranks, by branch, community, district and college.",
+    alternates: { canonical: "/cutoffs" },
+    // Arbitrary filter combinations are thin pages. Keep the canonical
+    // explorer indexable and ask crawlers not to index every permutation.
+    robots: hasFilter
+      ? { index: false, follow: true }
+      : { index: true, follow: true },
+  };
+}
 
 export const dynamic = "force-dynamic";
 
@@ -176,7 +193,7 @@ export default async function CutoffsPage({
                   <span
                     className={cn(
                       "mt-0.5 block text-[10px]",
-                      active ? "text-primary/75" : "text-muted-foreground",
+                      active ? "text-primary" : "text-muted-foreground",
                     )}
                   >
                     {formatNumber(count)} rows
@@ -260,8 +277,8 @@ export default async function CutoffsPage({
               </Badge>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[52rem] text-left text-[12px]">
+            <div className="overflow-x-auto" tabIndex={0} aria-label="Scrollable table">
+              <table className="mobile-sticky-first w-full min-w-[52rem] text-left text-[12px]">
                 <thead className="border-b border-border bg-surface/60 text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
                   <tr>
                     <th className="w-10 px-3 py-2.5 text-right font-medium">#</th>

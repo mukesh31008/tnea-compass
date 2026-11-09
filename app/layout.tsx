@@ -71,6 +71,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} min-h-screen antialiased`}
       >
+        {/*
+          Reveal animations only run when JavaScript is available. Without this
+          class the content stays visible, so a failed script or a strict CSP
+          cannot leave the page blank.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "document.documentElement.classList.add('js')",
+          }}
+        />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

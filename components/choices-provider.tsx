@@ -20,6 +20,7 @@ type ChoicesContextValue = {
   remove: (id: number) => void;
   move: (from: number, to: number) => void;
   setOrder: (ids: number[]) => void;
+  replace: (choices: ChoiceRecord[]) => void;
   clear: () => void;
 };
 
@@ -125,6 +126,10 @@ export function ChoicesProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const replace = React.useCallback((next: ChoiceRecord[]) => {
+    setChoices(next.slice(0, MAX_CHOICES));
+  }, []);
+
   const clear = React.useCallback(() => {
     setChoices([]);
   }, []);
@@ -139,9 +144,10 @@ export function ChoicesProvider({ children }: { children: React.ReactNode }) {
       remove,
       move,
       setOrder,
+      replace,
       clear,
     }),
-    [add, choices, clear, has, move, ready, setOrder, remove],
+    [add, choices, clear, has, move, ready, replace, setOrder, remove],
   );
 
   return (

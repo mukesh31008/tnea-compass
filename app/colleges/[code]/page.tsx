@@ -6,7 +6,9 @@ import {
   ArrowLeft,
   ArrowRight,
   Bus,
+  ChevronRight,
   ClipboardPlus,
+  FileWarning,
   GraduationCap,
   Home,
   Info,
@@ -21,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getCollegeProfile } from "@/lib/db/queries";
+import { reportIssueUrl, SITE_URL } from "@/lib/site";
 import { COMMUNITIES, COMMUNITY_LABELS } from "@/lib/tnea";
 import {
   formatCutoff,
@@ -43,6 +46,13 @@ export async function generateMetadata({
   return {
     title: `${profile.college.shortName ?? profile.college.name} (${profile.college.code})`,
     description: `${shortCollegeName(profile.college.name, 140)} — TNEA cutoffs, seats, hostel and fee data.`,
+    alternates: { canonical: `/colleges/${profile.college.code}` },
+    openGraph: {
+      title: `${profile.college.shortName ?? profile.college.name} (${profile.college.code})`,
+      description: `${shortCollegeName(profile.college.name, 140)} — published TNEA cutoffs, seats and reported facilities.`,
+      url: `/colleges/${profile.college.code}`,
+      type: "website",
+    },
   };
 }
 
@@ -83,8 +93,73 @@ export default async function CollegeProfilePage({
 
   const { college, hostel, fees, branches, totals } = profile;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollegeOrUniversity",
+        "@id": `${SITE_URL}/colleges/${college.code}#college`,
+        name: college.name,
+        alternateName: college.shortName ?? undefined,
+        identifier: college.code,
+        url: `${SITE_URL}/colleges/${college.code}`,
+        address: college.district
+          ? {
+              "@type": "PostalAddress",
+              addressLocality: college.district,
+              addressRegion: "Tamil Nadu",
+              addressCountry: "IN",
+            }
+          : undefined,
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: SITE_URL,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Colleges",
+            item: `${SITE_URL}/colleges`,
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: college.name,
+            item: `${SITE_URL}/colleges/${college.code}`,
+          },
+        ],
+      },
+    ],
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <nav
+        aria-label="Breadcrumb"
+        className="container-page flex flex-wrap items-center gap-1.5 pt-5 text-[11.5px] text-muted-foreground print-hidden"
+      >
+        <Link href="/" className="transition-colors hover:text-primary">
+          Home
+        </Link>
+        <ChevronRight className="size-3" />
+        <Link href="/colleges" className="transition-colors hover:text-primary">
+          Colleges
+        </Link>
+        <ChevronRight className="size-3" />
+        <span aria-current="page" className="truncate text-foreground/80">
+          {college.code} · {college.shortName ?? college.name}
+        </span>
+      </nav>
       <PageHeader
         eyebrow={`TNEA code ${college.code}`}
         title={college.name}
@@ -172,7 +247,7 @@ export default async function CollegeProfilePage({
               </p>
               <p className="text-[11px] text-muted-foreground">{stat.label}</p>
               {stat.caption && (
-                <p className="mt-0.5 text-[10px] text-muted-foreground/70">
+                <p className="mt-0.5 text-[10px] text-muted-foreground">
                   {stat.caption}
                 </p>
               )}
@@ -199,8 +274,8 @@ export default async function CollegeProfilePage({
                 <Badge variant="mono">{branches.length} branches</Badge>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[42rem] text-left text-[12px]">
+              <div className="overflow-x-auto" tabIndex={0} aria-label="Scrollable table">
+                <table className="mobile-sticky-first w-full min-w-[42rem] text-left text-[12px]">
                   <thead className="border-b border-border bg-surface/60 text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
                     <tr>
                       <th className="px-5 py-2.5 font-medium">Branch</th>
@@ -314,7 +389,7 @@ export default async function CollegeProfilePage({
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-4">
                 <div>
                   <h2 className="text-sm font-semibold">
-                    2026 final closing cutoffs
+                    2026 R3 cumulative closing cutoffs
                   </h2>
                   <p className="mt-0.5 text-[11px] text-muted-foreground">
                     Last-ranked allotment across R1–R3 · grouped by the
@@ -324,8 +399,8 @@ export default async function CollegeProfilePage({
                 <Badge variant="success">Official 2026</Badge>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[52rem] text-left text-[12px]">
+              <div className="overflow-x-auto" tabIndex={0} aria-label="Scrollable table">
+                <table className="mobile-sticky-first w-full min-w-[52rem] text-left text-[12px]">
                   <thead className="border-b border-border bg-surface/60 text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
                     <tr>
                       <th className="px-5 py-2.5 font-medium">Branch</th>
@@ -361,7 +436,7 @@ export default async function CollegeProfilePage({
                               className="px-2 py-3 text-right align-top"
                             >
                               {cell?.mark === null || cell?.mark === undefined ? (
-                                <span className="text-muted-foreground/60">
+                                <span className="text-muted-foreground">
                                   —
                                 </span>
                               ) : (
@@ -374,7 +449,7 @@ export default async function CollegeProfilePage({
                                       ? "rank n/r"
                                       : `#${formatNumber(cell.rank)}${cell.rankSuffix ?? ""}`}
                                   </span>
-                                  <span className="block font-mono text-[9px] text-muted-foreground/70">
+                                  <span className="block font-mono text-[9px] text-muted-foreground">
                                     R{cell.sourceRound ?? "?"} · p
                                     {cell.sourcePage ?? "?"}
                                   </span>
@@ -408,8 +483,8 @@ export default async function CollegeProfilePage({
                 </div>
                 <Badge variant="outline">R1 → R3</Badge>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[38rem] text-left text-[12px]">
+              <div className="overflow-x-auto" tabIndex={0} aria-label="Scrollable table">
+                <table className="mobile-sticky-first w-full min-w-[38rem] text-left text-[12px]">
                   <thead className="border-b border-border bg-surface/60 text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
                     <tr>
                       <th className="px-5 py-2.5 font-medium">Branch</th>
@@ -486,8 +561,8 @@ export default async function CollegeProfilePage({
                 <Badge variant="outline">2025 context</Badge>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[44rem] text-left text-[12px]">
+              <div className="overflow-x-auto" tabIndex={0} aria-label="Scrollable table">
+                <table className="mobile-sticky-first w-full min-w-[44rem] text-left text-[12px]">
                   <thead className="border-b border-border bg-surface/60 text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
                     <tr>
                       <th className="px-5 py-2.5 font-medium">Branch</th>
@@ -523,7 +598,7 @@ export default async function CollegeProfilePage({
                               className="px-2 py-3 text-right align-top"
                             >
                               {cell?.mark === null || cell?.mark === undefined ? (
-                                <span className="text-muted-foreground/60">
+                                <span className="text-muted-foreground">
                                   —
                                 </span>
                               ) : (
@@ -564,8 +639,8 @@ export default async function CollegeProfilePage({
                 </div>
                 <Badge variant="outline">6 years</Badge>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[38rem] text-left text-[12px]">
+              <div className="overflow-x-auto" tabIndex={0} aria-label="Scrollable table">
+                <table className="mobile-sticky-first w-full min-w-[38rem] text-left text-[12px]">
                   <thead className="border-b border-border bg-surface/60 text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
                     <tr>
                       <th className="px-5 py-2.5 font-medium">Branch</th>
@@ -606,8 +681,9 @@ export default async function CollegeProfilePage({
                 </table>
               </div>
               <p className="border-t border-border px-5 py-3 text-[11px] leading-relaxed text-muted-foreground">
-                Marks above 200 in the archived export were treated as rank
-                values and excluded.
+                From the archived TNEA all-years export. Marks above 200 in that
+                export were rank-like values and were excluded. 2020–2024 ranks
+                are not published in this dataset.
               </p>
             </Card>
           </div>
@@ -707,6 +783,18 @@ export default async function CollegeProfilePage({
                   are not in this dataset.
                 </li>
               </ul>
+              <a
+                href={reportIssueUrl({
+                  kind: "data",
+                  collegeCode: college.code,
+                })}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-flex items-center gap-1.5 border-t border-primary/15 pt-3 text-[11px] font-medium text-primary hover:underline"
+              >
+                <FileWarning className="size-3.5" />
+                Report an error for this college
+              </a>
             </Card>
           </aside>
         </div>

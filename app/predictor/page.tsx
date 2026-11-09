@@ -36,7 +36,7 @@ import { formatCutoff, formatNumber } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Where you stand",
   description:
-    "Compare your TNEA rank or cutoff mark with the published 2026 final close or the 2025 close. A distance reading, not an admission probability.",
+    "Compare your TNEA rank or cutoff mark with the published 2026 R3 cumulative close or the 2025 close. A distance reading, not an admission probability.",
 };
 
 export const dynamic = "force-dynamic";
@@ -179,7 +179,7 @@ export default async function PredictorPage({
       <PageHeader
         eyebrow="Position"
         title="Where do you stand?"
-        description={`Compare your rank or cutoff with the published ${year} closing values. The result is a distance reading, not an admission probability.`}
+        description={`Compare your rank or cutoff with the published ${year === 2026 ? "2026 R3 cumulative close" : "2025 close"}. The result is a distance reading, not an admission probability.`}
         actions={
           <Badge variant="outline" className="gap-1.5 px-3 py-1.5">
             <Sparkles className="size-3.5 text-primary" />
@@ -220,7 +220,7 @@ export default async function PredictorPage({
                 title: `Compare the ${year} close`,
                 body:
                   year === 2026
-                    ? "Every programme is checked against its final cumulative 2026 close, grouped by the community the seat was allotted against."
+                    ? "Every programme is checked against its R3 cumulative 2026 close — the last-ranked allotment in the published R1–R3 lists — grouped by the community the seat was allotted against."
                     : "Every programme is checked against its published 2025 closing rank or closing mark for your community.",
               },
               {
@@ -311,8 +311,8 @@ export default async function PredictorPage({
                       Comparison with {year} closing values
                     </h2>
                     <p className="mt-0.5 text-[11px] text-muted-foreground">
-                      Strongest signals first, then the most competitive
-                      programmes within each band.
+                      Furthest inside the close first, then the tightest
+                      readings within each distance band.
                     </p>
                   </div>
                   <Badge variant="mono">
@@ -322,8 +322,8 @@ export default async function PredictorPage({
                   </Badge>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[54rem] text-left text-[12px]">
+                <div className="overflow-x-auto" tabIndex={0} aria-label="Scrollable table">
+                  <table className="mobile-sticky-first w-full min-w-[54rem] text-left text-[12px]">
                     <thead className="border-b border-border bg-surface/60 text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
                       <tr>
                         <th className="px-4 py-2.5 font-medium">College</th>
@@ -490,35 +490,34 @@ export default async function PredictorPage({
               </h2>
               <div className="mt-3 grid gap-3 text-[11px] leading-relaxed text-muted-foreground sm:grid-cols-2 lg:grid-cols-3">
                 <p>
-                  <span className="font-medium text-foreground">
-                    Strong signal:
-                  </span>{" "}
-                  rank at least 20% inside the published close, or a mark 5+ above.
+                  <span className="font-medium text-foreground">Well inside:</span>{" "}
+                  rank more than 20% inside the published close, or a mark 5+
+                  above it.
                 </p>
                 <p>
-                  <span className="font-medium text-foreground">
-                    Favourable:
-                  </span>{" "}
+                  <span className="font-medium text-foreground">Inside:</span>{" "}
                   rank at or inside the close, or mark at or above it.
                 </p>
                 <p>
                   <span className="font-medium text-foreground">
-                    Borderline:
+                    Near the close:
                   </span>{" "}
-                  within 15% of the rank, or within 2 marks.
+                  rank up to 15% outside the close, or mark up to 2 below it.
                 </p>
                 <p>
-                  <span className="font-medium text-foreground">Stretch:</span>{" "}
-                  within 40% of the rank, or 2–5 marks below.
+                  <span className="font-medium text-foreground">Outside:</span>{" "}
+                  rank 15–40% outside the close, or mark 2–5 below it.
                 </p>
                 <p>
-                  <span className="font-medium text-foreground">Unlikely:</span>{" "}
-                  further outside than the stretch threshold.
+                  <span className="font-medium text-foreground">
+                    Well outside:
+                  </span>{" "}
+                  further outside than the band above.
                 </p>
                 <p>
                   <span className="font-medium text-foreground">Important:</span>{" "}
                   {year === 2026
-                    ? "2026 is the final cumulative close after Round 3, grouped by the community the seat was allotted against. 2024 ranks were a duplicate export and are not used."
+                    ? "2026 is the R3 cumulative close — the last-ranked allotment in the published R1–R3 lists — grouped by the community the seat was allotted against. It is not a prediction of a later round. 2024 ranks were a duplicate export and are not used."
                     : "2025 candidate-community closing values. 2024 ranks were a duplicate export and are not used."}
                 </p>
               </div>

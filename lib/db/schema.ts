@@ -550,6 +550,19 @@ export const applications = sqliteTable(
   ],
 );
 
+/**
+ * An opt-in snapshot of the browser choice list. It is only written when the
+ * signed-in student presses "Save to account"; nothing is uploaded silently.
+ * The payload is the same validated ChoiceRecord array used by localStorage.
+ */
+export const choiceLists = sqliteTable("choice_lists", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  payload: text("payload").notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+});
+
 export const userRelations = relations(user, ({ one, many }) => ({
   profile: one(studentProfiles, {
     fields: [user.id],
@@ -558,6 +571,10 @@ export const userRelations = relations(user, ({ one, many }) => ({
   academicRecords: many(academicRecords),
   examRecords: many(examRecords),
   applications: many(applications),
+  choiceList: one(choiceLists, {
+    fields: [user.id],
+    references: [choiceLists.userId],
+  }),
   sessions: many(session),
   accounts: many(account),
 }));
@@ -596,8 +613,16 @@ export const applicationsRelations = relations(applications, ({ one }) => ({
   }),
 }));
 
+export const choiceListsRelations = relations(choiceLists, ({ one }) => ({
+  user: one(user, {
+    fields: [choiceLists.userId],
+    references: [user.id],
+  }),
+}));
+
 export type User = typeof user.$inferSelect;
 export type StudentProfile = typeof studentProfiles.$inferSelect;
 export type AcademicRecord = typeof academicRecords.$inferSelect;
 export type ExamRecord = typeof examRecords.$inferSelect;
 export type Application = typeof applications.$inferSelect;
+export type ChoiceList = typeof choiceLists.$inferSelect;

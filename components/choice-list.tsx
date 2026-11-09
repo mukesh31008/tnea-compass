@@ -37,6 +37,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChoiceSync } from "@/components/choice-sync";
 import { useChoices } from "@/components/choices-provider";
 import { csvField, type ChoiceRecord } from "@/lib/choices";
 import { cn, formatNumber } from "@/lib/utils";
@@ -379,6 +380,7 @@ export function ChoiceList() {
           </div>
 
           <div className="flex flex-wrap gap-2 print:hidden">
+            <ChoiceSync />
             <Button
               type="button"
               variant="outline"

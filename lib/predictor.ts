@@ -21,15 +21,20 @@ export const BAND_ORDER: Record<PositionBand, number> = {
   unlikely: 4,
 };
 
+/**
+ * Labels describe distance from the published close. They deliberately avoid
+ * words such as "likely", "strong" or "chance", which read as an admission
+ * prediction. The band IDs are kept for stored links and sorting.
+ */
 export const BAND_META: Record<
   PositionBand,
   { label: string; tone: "success" | "warning" | "outline" | "destructive" }
 > = {
-  comfortable: { label: "Strong signal", tone: "success" },
-  likely: { label: "Favourable", tone: "success" },
-  borderline: { label: "Borderline", tone: "warning" },
-  stretch: { label: "Stretch", tone: "outline" },
-  unlikely: { label: "Unlikely", tone: "destructive" },
+  comfortable: { label: "Well inside", tone: "success" },
+  likely: { label: "Inside", tone: "success" },
+  borderline: { label: "Near the close", tone: "warning" },
+  stretch: { label: "Outside", tone: "outline" },
+  unlikely: { label: "Well outside", tone: "destructive" },
 };
 
 /**
@@ -47,7 +52,7 @@ export function predictByRank(
     return {
       band: "comfortable",
       label: BAND_META.comfortable.label,
-      note: "Your rank is well inside the published closing rank.",
+      note: "Your rank is more than 20% inside the published closing rank.",
       advantage,
     };
   }
@@ -55,7 +60,7 @@ export function predictByRank(
     return {
       band: "likely",
       label: BAND_META.likely.label,
-      note: "Your rank is at or better than the published closing rank.",
+      note: "Your rank is at or inside the published closing rank.",
       advantage,
     };
   }
@@ -63,7 +68,7 @@ export function predictByRank(
     return {
       band: "borderline",
       label: BAND_META.borderline.label,
-      note: "Close to the published closing rank; later rounds can move.",
+      note: "Your rank is up to 15% outside the published closing rank; a later round can move it.",
       advantage,
     };
   }
@@ -71,14 +76,14 @@ export function predictByRank(
     return {
       band: "stretch",
       label: BAND_META.stretch.label,
-      note: "Outside the published closing rank, but within reach if it moves.",
+      note: "Your rank is 15–40% outside the published closing rank.",
       advantage,
     };
   }
   return {
     band: "unlikely",
     label: BAND_META.unlikely.label,
-    note: "Well outside the published closing rank for this programme.",
+    note: "Your rank is more than 40% outside the published closing rank.",
     advantage,
   };
 }
@@ -113,7 +118,7 @@ export function predictByCutoff(
     return {
       band: "borderline",
       label: BAND_META.borderline.label,
-      note: "Within 2 marks of the published closing mark.",
+      note: "Your mark is up to 2 marks below the published closing mark.",
       advantage,
     };
   }
@@ -121,14 +126,14 @@ export function predictByCutoff(
     return {
       band: "stretch",
       label: BAND_META.stretch.label,
-      note: "2 to 5 marks below the published closing mark.",
+      note: "Your mark is 2 to 5 marks below the published closing mark.",
       advantage,
     };
   }
   return {
     band: "unlikely",
     label: BAND_META.unlikely.label,
-    note: "More than 5 marks below the published closing mark.",
+    note: "Your mark is more than 5 marks below the published closing mark.",
     advantage,
   };
 }

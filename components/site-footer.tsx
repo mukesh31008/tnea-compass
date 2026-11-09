@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { Separator } from "@/components/ui/separator";
+import seedManifest from "@/data/seed/manifest.json";
+import { reportIssueUrl } from "@/lib/site";
 
 const COLUMNS = [
   {
@@ -25,6 +27,7 @@ const COLUMNS = [
     title: "About",
     links: [
       { label: "Admission pathways", href: "/pathways" },
+      { label: "Year coverage", href: "/about#coverage" },
       { label: "Methodology", href: "/about#method" },
       { label: "Data provenance", href: "/about#data" },
       { label: "Privacy", href: "/about#privacy" },
@@ -47,7 +50,18 @@ export function SiteFooter() {
             </p>
             <p className="mt-4 inline-flex items-center gap-2 rounded-md border border-border bg-card px-2.5 py-1.5 text-[11px] text-muted-foreground">
               <span className="size-1.5 rounded-full bg-success" />
-              Data updated for 2026 counselling
+              Dataset {seedManifest.generatedAt} · 2020–2026
+            </p>
+            <p className="mt-3 text-[11px] text-muted-foreground">
+              <a
+                href={reportIssueUrl({ kind: "data" })}
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-foreground underline decoration-border underline-offset-4 hover:text-primary"
+              >
+                Report a data error
+              </a>{" "}
+              · corrections stay public.
             </p>
           </div>
 
@@ -89,7 +103,7 @@ export function SiteFooter() {
             </a>
             .
           </p>
-          <p className="shrink-0 font-mono text-[11px] text-muted-foreground/70">
+          <p className="shrink-0 font-mono text-[11px] text-muted-foreground">
             © {new Date().getFullYear()} TNEA Compass
           </p>
         </div>

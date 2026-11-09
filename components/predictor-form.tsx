@@ -146,7 +146,7 @@ export function PredictorForm({
               defaultValue={String(year)}
               className="h-9 w-full rounded-lg border border-input bg-card px-2.5 text-[13px] shadow-xs outline-none focus-visible:border-ring/50 focus-visible:ring-2 focus-visible:ring-ring/20"
             >
-              <option value="2026">2026 — final cumulative close</option>
+              <option value="2026">2026 — R3 cumulative close</option>
               <option value="2025">2025 — previous close</option>
             </select>
           </label>

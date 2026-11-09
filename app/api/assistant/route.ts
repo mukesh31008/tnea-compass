@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const limit = rateLimit(clientKey(request.headers));
+  const limit = await rateLimit(clientKey(request.headers));
   if (!limit.allowed) {
     const retryAfter = Math.max(
       1,

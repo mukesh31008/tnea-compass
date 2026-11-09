@@ -99,11 +99,6 @@ export function SiteHeader() {
           </button>
           <ThemeToggle />
           <AccountMenu />
-          <Link href="/predictor" className="hidden sm:block">
-            <Button size="sm" className="gap-1.5">
-              Where I stand
-            </Button>
-          </Link>
 
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>

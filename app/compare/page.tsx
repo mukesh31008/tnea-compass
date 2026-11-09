@@ -386,7 +386,7 @@ export default async function ComparePage({
                   record, never a zero.
                 </p>
               </div>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto" tabIndex={0} aria-label="Scrollable table">
                 <table className="w-full min-w-[46rem] text-left text-[12px]">
                   <thead>
                     <tr className="border-b border-border bg-surface/60">
@@ -454,7 +454,7 @@ export default async function ComparePage({
                 </div>
                 <Badge variant="outline">2023 record</Badge>
               </div>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto" tabIndex={0} aria-label="Scrollable table">
                 <table className="w-full min-w-[46rem] text-left text-[12px]">
                   <thead>
                     <tr className="border-b border-border bg-surface/60">
@@ -530,7 +530,7 @@ export default async function ComparePage({
                   </p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto" tabIndex={0} aria-label="Scrollable table">
                   <table className="w-full min-w-[46rem] text-left text-[12px]">
                     <thead>
                       <tr className="border-b border-border bg-surface/60">

@@ -202,8 +202,10 @@ export function ComparePicker({ selected }: { selected: SelectedCollege[] }) {
               ? "Remove a college to add another"
               : "Search a college name or code, for example 0001…"
           }
+          role="combobox"
           aria-label="Search colleges to compare"
           aria-expanded={open}
+          aria-haspopup="listbox"
           aria-controls="compare-search-results"
           aria-autocomplete="list"
           className="h-10 pl-9 pr-10"

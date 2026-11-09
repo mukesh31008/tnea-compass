@@ -3,6 +3,11 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
+import {
+  emailConfigured,
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+} from "@/lib/email";
 
 const fallbackSecret =
   "tnea-compass-local-development-secret-do-not-use-in-production";
@@ -50,7 +55,35 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 8,
     autoSignIn: true,
+    ...(emailConfigured()
+      ? {
+          sendResetPassword: async ({
+            user,
+            url,
+          }: {
+            user: { email: string };
+            url: string;
+          }) => {
+            await sendPasswordResetEmail({ to: user.email, url });
+          },
+        }
+      : {}),
   },
+  ...(emailConfigured()
+    ? {
+        emailVerification: {
+          sendVerificationEmail: async ({
+            user,
+            url,
+          }: {
+            user: { email: string };
+            url: string;
+          }) => {
+            await sendVerificationEmail({ to: user.email, url });
+          },
+        },
+      }
+    : {}),
   session: {
     expiresIn: 60 * 60 * 24 * 30,
     updateAge: 60 * 60 * 24,

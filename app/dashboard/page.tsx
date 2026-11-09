@@ -300,7 +300,7 @@ export default async function DashboardPage() {
             <div className="mt-3 grid gap-2">
               {[
                 ["/colleges", "College explorer", "478 institutions"],
-                ["/cutoffs?year=2026", "2026 cutoffs", "Final cumulative close"],
+                ["/cutoffs?year=2026", "2026 cutoffs", "R3 cumulative close"],
                 ["/predictor?year=2026", "Where you stand", "Published closes only"],
                 ["/compare", "Compare colleges", "Up to four at once"],
               ].map(([href, label, hint]) => (

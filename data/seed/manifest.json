@@ -3,7 +3,7 @@
   "source": "Original TNEA imports for 2020–2025, plus the official TNEA 2026 allotment lists, seat matrix, post-Round-3 vacancy statement and college directory published at static.tneaonline.org.",
   "notes": [
     "2026 closing values are the last-ranked allotment in the union of Rounds 1–3, grouped by the community against which the seat was allotted.",
-    "2026 closing ranks are stored with the round and PDF page of the last-ranked allotment; the final close is the Round 3 cumulative close.",
+    "2026 closing ranks are stored with the round and PDF page of the last-ranked allotment; the R3 cumulative close is the Round 3 cumulative close.",
     "Round cutoff rows are cumulative: round 2 includes round 1, and round 3 includes rounds 1 and 2.",
     "2026 seat totals come from the official seat matrix; allotted seats are left null because the matrix does not report them.",
     "2026 vacancies are the official post-Round-3 vacancy statement, split by community.",

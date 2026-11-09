@@ -11,7 +11,7 @@ import { Card } from "@/components/ui/card";
 export const metadata: Metadata = {
   title: "My choice list",
   description:
-    "Build, reorder and export a TNEA counselling choice list. Saved in your browser, no account needed.",
+    "Build, reorder and export a TNEA counselling choice list. Saved in your browser, with optional signed-in sync.",
 };
 
 export default function ChoicesPage() {
@@ -21,12 +21,12 @@ export default function ChoicesPage() {
         <PageHeader
           eyebrow="My list"
           title="Order your counselling choices"
-          description="Add branches from college profiles or predictor results, then drag them into the order you would actually counsel. The list stays in this browser."
+          description="Add branches from college profiles or predictor results, then drag them into the order you would actually counsel. The list stays in this browser unless you choose Save to account."
           actions={
             <>
               <Badge variant="outline" className="gap-1.5 px-3 py-1.5">
                 <ListChecks className="size-3.5 text-primary" />
-                Local to this browser
+                Local by default · sync on request
               </Badge>
               <Button asChild size="sm" className="gap-1.5">
                 <Link href="/colleges">Add colleges</Link>

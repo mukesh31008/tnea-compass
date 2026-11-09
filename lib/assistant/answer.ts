@@ -313,7 +313,7 @@ async function answerTimeline(parsed: ParsedQuery): Promise<AssistantResult> {
     return {
       ...baseResult(parsed),
       title: `${shortName(parsed.college.name, parsed.college.shortName)} · ${parsed.branch.code} · 2026 rounds`,
-      summary: `For ${community}, the cumulative close moved from ${mark(rows[0]?.mark)} after Round 1 to ${mark(final.mark)} after Round 3. The final close is the last-ranked allotment across the union of R1–R3.`,
+      summary: `For ${community}, the cumulative close moved from ${mark(rows[0]?.mark)} after Round 1 to ${mark(final.mark)} after Round 3. The R3 cumulative close is the last-ranked allotment across the union of R1–R3.`,
       tables: [table],
       citations: citationsForRows(rows, documents),
       caveats: [
@@ -365,7 +365,7 @@ async function answerTimeline(parsed: ParsedQuery): Promise<AssistantResult> {
     citations: citationsForRows(rows, documents),
     caveats: [
       "2026 groups by the community the seat was allotted against.",
-      "Each round is cumulative; the final R3 value must equal the published final close.",
+      "Each round is cumulative; the R3 value must equal the published R3 cumulative close.",
     ],
     followUps: [
       `What was the 2026 ${community} close for ${parsed.college.code}?`,
@@ -651,7 +651,7 @@ async function answerMethod(parsed: ParsedQuery): Promise<AssistantResult> {
     ...baseResult(parsed),
     title: "How to read the record",
     summary:
-      "For 2020–2025, a cutoff row belongs to the candidate's community as recorded in the archived TNEA export. For 2026, the official tables group the close by the community against which the seat was allotted. The 2026 final close is the last-ranked allotment across the union of Rounds 1–3, with its source round and PDF page.",
+      "For 2020–2025, a cutoff row belongs to the candidate's community as recorded in the archived TNEA export. For 2026, the official tables group the close by the community against which the seat was allotted. The 2026 R3 cumulative close is the last-ranked allotment across the union of Rounds 1–3, with its source round and PDF page.",
     tables: [table],
     citations: [
       { label: "Method", href: "/about#method" },
@@ -774,8 +774,59 @@ async function answerCompare(parsed: ParsedQuery): Promise<AssistantResult> {
       .map((branch) => [branch.branchCode, branch]),
   );
 
+  const normalizeBranchName = (name: string) =>
+    name
+      .toLowerCase()
+      .replace(/&/g, " and ")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+
   const sharedKeys = [...aBranches.keys()].filter((key) => bBranches.has(key));
-  const keys = sharedKeys.length > 0 ? sharedKeys : [...aBranches.keys()];
+
+  type Pair = {
+    key: string;
+    left?: (typeof a.branches)[number];
+    right?: (typeof b.branches)[number];
+    matchedByName: boolean;
+  };
+
+  let pairs: Pair[] = [];
+  if (sharedKeys.length > 0) {
+    pairs = sharedKeys.map((key) => ({
+      key,
+      left: aBranches.get(key),
+      right: bBranches.get(key),
+      matchedByName: false,
+    }));
+  } else {
+    // Different colleges can use different codes for the same programme. Fall
+    // back to the published branch name so the table explains the mismatch
+    // instead of reporting every second value as missing.
+    const bByName = new Map(
+      b.branches.map((branch) => [normalizeBranchName(branch.branchName), branch]),
+    );
+    const aSource = branchFilter ? a.branches : [...aBranches.values()];
+    for (const left of aSource) {
+      if (branchFilter && left.branchCode !== branchFilter) continue;
+      const right = bByName.get(normalizeBranchName(left.branchName));
+      pairs.push({
+        key: `${left.branchCode}:${left.branchName}`,
+        left,
+        right,
+        matchedByName: Boolean(right),
+      });
+    }
+    if (pairs.length === 0) {
+      pairs = [...a.branches].map((left) => ({
+        key: `${left.branchCode}:${left.branchName}`,
+        left,
+        right: undefined,
+        matchedByName: false,
+      }));
+    }
+  }
+
+  const nameMatched = pairs.filter((pair) => pair.matchedByName).length;
 
   const table: AssistantTable = {
     title: `2026 comparison · ${parsed.branch?.code ?? "shared programmes"}`,
@@ -786,15 +837,15 @@ async function answerCompare(parsed: ParsedQuery): Promise<AssistantResult> {
       `${first.code} seats`,
       `${second.code} seats`,
     ],
-    rows: keys.slice(0, MAX_TABLE_ROWS).map((key) => {
-      const left = aBranches.get(key);
-      const right = bBranches.get(key);
+    rows: pairs.slice(0, MAX_TABLE_ROWS).map((pair) => {
+      const left = pair.left;
+      const right = pair.right;
       return [
         left
           ? `${left.branchCode} · ${left.branchName}`
           : right
             ? `${right.branchCode} · ${right.branchName}`
-            : key,
+            : pair.key,
         mark(left?.cutoffs2026.OC?.mark),
         mark(right?.cutoffs2026.OC?.mark),
         formatNumber(left?.seats2026?.totalSeats),
@@ -803,18 +854,27 @@ async function answerCompare(parsed: ParsedQuery): Promise<AssistantResult> {
     }),
     note:
       sharedKeys.length === 0
-        ? "No shared programme was found, so the table lists the first college's programmes with Not reported for the second."
+        ? nameMatched > 0
+          ? `No shared programme code was found. ${nameMatched} programme${nameMatched === 1 ? "" : "s"} matched by published name; check the code column before comparing.`
+          : "No shared programme code or name was found. The table lists the first college's programmes with Not reported for the second."
         : undefined,
   };
 
   return {
     ...baseResult(parsed),
     title: `${first.code} vs ${second.code}`,
-    summary: `The table compares the 2026 Open-category close and seat count for ${sharedKeys.length > 0 ? `${sharedKeys.length} shared programme${sharedKeys.length === 1 ? "" : "s"}` : "the first college's programmes"}. ${a.college.code} has ${formatNumber(a.totals.seats2026)} reported seats; ${b.college.code} has ${formatNumber(b.totals.seats2026)}.`,
+    summary: `The table compares the 2026 Open-category close and seat count for ${
+      sharedKeys.length > 0
+        ? `${sharedKeys.length} shared programme${sharedKeys.length === 1 ? "" : "s"}`
+        : nameMatched > 0
+          ? `${nameMatched} programme${nameMatched === 1 ? "" : "s"} matched by name because the colleges use different branch codes`
+          : "the first college's programmes"
+    }. ${a.college.code} has ${formatNumber(a.totals.seats2026)} reported seats; ${b.college.code} has ${formatNumber(b.totals.seats2026)}.`,
     tables: [table],
     citations: [{ label: "Method and data provenance", href: "/about#data" }],
     caveats: [
       "Only the Open category is shown in this comparison.",
+      "A branch code is a college's own catalogue code. Different codes do not always mean different programmes, so name matches are labelled.",
       "No teaching quality, placement or fee judgement is implied. The comparison is limited to the published record.",
     ],
     followUps: [

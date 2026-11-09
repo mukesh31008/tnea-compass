@@ -43,3 +43,11 @@ next-env.d.ts
 # local data
 /data/*.db
 /data/*.db-*
+
+# database exports
+/backups
+
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/

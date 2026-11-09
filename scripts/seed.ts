@@ -228,7 +228,7 @@ async function main() {
       )
   `);
   if (Number(finalMismatch.rows[0]?.n ?? 0) !== 0) {
-    throw new Error("2026 final close does not match the Round 3 cumulative close");
+    throw new Error("2026 R3 cumulative close does not match the Round 3 cumulative close");
   }
 
   // Closing ranks must worsen (never improve) as later rounds are included.

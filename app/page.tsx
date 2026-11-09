@@ -30,80 +30,84 @@ import { formatNumber } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-const TOOLS = [
+const PATHS = [
+  {
+    href: "/colleges",
+    icon: Building2,
+    step: "01",
+    title: "College explorer",
+    description:
+      "Filter Tamil Nadu institutions by district, branch, accreditation and hostel, then open any college record.",
+    action: "Find colleges",
+  },
+  {
+    href: "/predictor",
+    icon: Sparkles,
+    step: "02",
+    title: "Read your position",
+    description:
+      "Compare your rank or cutoff with the published close and see the distance — never an admission probability.",
+    action: "Where you stand",
+  },
+  {
+    href: "/choices",
+    icon: ListChecks,
+    step: "03",
+    title: "Build your list",
+    description:
+      "Reorder a counselling list, check for duplicates, then print or export it. Local by default, sync on request.",
+    action: "Open my list",
+  },
+];
+
+const SECONDARY_TOOLS = [
   {
     href: "/assistant",
     icon: MessageSquareQuote,
     title: "Ask the record",
-    description:
-      "Ask for a cutoff, round timeline, seat count or vacancy. Get one cited answer, or a refusal.",
-  },
-  {
-    href: "/colleges",
-    icon: Building2,
-    title: "College explorer",
-    description:
-      "Filter Tamil Nadu institutions by district, branch, accreditation, hostel and more.",
+    description: "One cited answer from the published documents.",
   },
   {
     href: "/cutoffs",
     icon: BarChart3,
     title: "Cutoff trends",
-    description:
-      "See how closing marks moved across seven years, every branch and community.",
-  },
-  {
-    href: "/predictor",
-    icon: Sparkles,
-    title: "Where you stand",
-    description:
-      "Compare your rank or cutoff with published closing values and see the distance.",
-  },
-  {
-    href: "/predictor?mode=cutoff",
-    icon: Calculator,
-    title: "Cutoff check",
-    description:
-      "Compare your cutoff mark with the published closing marks by branch and community.",
+    description: "How closing marks moved across 2020–2026.",
   },
   {
     href: "/compare",
     icon: GitCompareArrows,
     title: "Compare colleges",
-    description:
-      "Put up to four colleges side by side — cutoffs, seats, fees and facilities.",
+    description: "Up to four colleges side by side.",
   },
   {
-    href: "/choices",
-    icon: ListChecks,
-    title: "Choice list",
-    description:
-      "Build, reorder and export a counselling list with duplicate checks.",
+    href: "/predictor?mode=cutoff",
+    icon: Calculator,
+    title: "Cutoff check",
+    description: "Compare a mark with published closes.",
   },
   {
     href: "/pathways",
     icon: BookOpenCheck,
     title: "Admission pathways",
-    description:
-      "A versioned map of government quota, management quota, lateral entry and special categories.",
+    description: "Government, management and lateral entry.",
   },
 ];
 
 const STEPS = [
   {
     n: "01",
-    title: "Tell us where you stand",
-    body: "Enter your cutoff or rank and your community. No account, no personal details.",
+    title: "Every number keeps its year",
+    body: "A cutoff is never shown without the year, community and round it came from. 2026 is the R3 cumulative close, not a forecast.",
   },
   {
     n: "02",
-    title: "Read the evidence",
-    body: "Every result shows the published closing rank and earlier cutoff marks it was compared against.",
+    title: "Missing stays missing",
+    body: "If a published document does not report a value, the site says Not reported. Nothing is filled with zero, a guess or a converted rank.",
   },
   {
     n: "03",
-    title: "Build your list",
-    body: "Save colleges, order your choices, and export a clean PDF or CSV.",
+    title: "Your inputs stay yours",
+    body: "The position check needs no account. The choice list lives in this browser unless you explicitly choose to sync it.",
   },
 ];
 
@@ -216,7 +220,7 @@ export default async function HomePage() {
                   <div>
                     <p className="text-sm font-semibold">Read your position</p>
                     <p className="text-[11px] text-muted-foreground">
-                      Based on the 2026 final close
+                      Based on the 2026 R3 cumulative close
                     </p>
                   </div>
                 </div>
@@ -319,40 +323,82 @@ export default async function HomePage() {
 
       <section className="container-page py-16 md:py-20">
         <SectionHeading
-          eyebrow="The toolkit"
-          title="Everything you need, in one place"
-          description="Eight focused tools that follow the actual TNEA counselling workflow — from first question to final choice order."
+          eyebrow="Start here"
+          title="Three paths, one honest record"
+          description="Find a college, read your position, then build a list you can explain. The rest of the toolkit is one step away."
           actions={
-            <Link href="/colleges">
+            <Link href="/assistant">
               <Button variant="outline" size="sm" className="gap-1.5">
-                Browse colleges
-                <ArrowRight className="size-3.5" />
+                <MessageSquareQuote className="size-3.5" />
+                Ask a question
               </Button>
             </Link>
           }
         />
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {TOOLS.map((tool, index) => (
-            <Reveal key={tool.href} delay={index * 50}>
-              <Link href={tool.href} className="group block h-full">
-                <Card className="card-hover flex h-full flex-col p-5 hover:border-primary/25">
-                  <div className="flex items-start justify-between">
-                    <span className="grid size-10 place-items-center rounded-lg border border-border bg-surface text-primary">
-                      <tool.icon className="size-[18px]" />
+        <ol className="grid gap-4 lg:grid-cols-3">
+          {PATHS.map((path, index) => (
+            <li key={path.href} className="h-full">
+              <Reveal delay={index * 60} className="h-full">
+                <Link href={path.href} className="group block h-full">
+                  <Card className="card-hover flex h-full flex-col p-5 hover:border-primary/25">
+                    <div className="flex items-start justify-between">
+                      <span className="grid size-10 place-items-center rounded-lg border border-border bg-surface text-primary">
+                        <path.icon className="size-[18px]" />
+                      </span>
+                      <span className="font-mono text-[11px] font-semibold text-muted-foreground">
+                        {path.step}
+                      </span>
+                    </div>
+                    <h3 className="mt-4 text-[16px] font-semibold tracking-tight">
+                      {path.title}
+                    </h3>
+                    <p className="mt-1.5 flex-1 text-[13px] leading-relaxed text-muted-foreground">
+                      {path.description}
+                    </p>
+                    <span className="mt-4 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-primary">
+                      {path.action}
+                      <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
                     </span>
-                    <ArrowRight className="size-4 -translate-x-1 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
-                  </div>
-                  <h3 className="mt-4 text-[15px] font-semibold tracking-tight">
-                    {tool.title}
-                  </h3>
-                  <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
-                    {tool.description}
-                  </p>
-                </Card>
-              </Link>
-            </Reveal>
+                  </Card>
+                </Link>
+              </Reveal>
+            </li>
           ))}
+        </ol>
+
+        <div className="mt-8 rounded-xl border border-border bg-surface/40 p-4 sm:p-5">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              Also in the toolkit
+            </h3>
+            <Link
+              href="/about#coverage"
+              className="text-[11px] font-medium text-primary hover:underline"
+            >
+              What each year covers
+            </Link>
+          </div>
+          <ul className="mt-3 grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-5">
+            {SECONDARY_TOOLS.map((tool) => (
+              <li key={tool.href}>
+                <Link
+                  href={tool.href}
+                  className="group flex h-full items-start gap-2.5 bg-card px-3 py-3 transition-colors hover:bg-accent/50"
+                >
+                  <tool.icon className="mt-0.5 size-4 shrink-0 text-primary" />
+                  <span className="min-w-0">
+                    <span className="block text-[12.5px] font-medium transition-colors group-hover:text-primary">
+                      {tool.title}
+                    </span>
+                    <span className="mt-0.5 block text-[11px] leading-relaxed text-muted-foreground">
+                      {tool.description}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -444,7 +490,7 @@ export default async function HomePage() {
               <SectionHeading
                 eyebrow="How it works"
                 title="A shortlist you can actually explain"
-                description="No black box. Every recommendation is backed by the closing ranks it was compared against."
+                description="No black box. Every reading is tied to the published record it came from."
                 className="mb-0"
               />
               <div className="mt-8 flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3">

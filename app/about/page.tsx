@@ -4,14 +4,17 @@ import {
   ArrowRight,
   BookOpenCheck,
   FileText,
+  FileWarning,
   Info,
   ShieldCheck,
 } from "lucide-react";
 
+import seedManifest from "@/data/seed/manifest.json";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { getDatasetStats, getSourceDocuments } from "@/lib/db/queries";
+import { reportIssueUrl } from "@/lib/site";
 import { formatNumber } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -24,16 +27,20 @@ export const dynamic = "force-dynamic";
 
 const RULES = [
   {
-    title: "2020–2025 closes",
-    body: "The published cutoff mark and closing rank for the candidate's community, as recorded in the archived TNEA export.",
+    title: "2020–2024 cutoff marks",
+    body: "The published cutoff mark for the candidate's community, taken from the previous project's archived TNEA export and cleaned to published marks at or below 200. Closing ranks for these years are not published in this dataset.",
+  },
+  {
+    title: "2025 cutoff marks and closing ranks",
+    body: "The published mark and closing rank for the candidate's community, taken from the archived TNEA export.",
   },
   {
     title: "2026 closes",
-    body: "The last-ranked allotment in the union of Rounds 1–3, grouped by the community the seat was allotted against. A tie-break suffix is kept exactly as printed.",
+    body: "The R3 cumulative close: the last-ranked allotment in the union of Rounds 1–3, grouped by the community the seat was allotted against. A tie-break suffix is kept exactly as printed.",
   },
   {
     title: "Round timeline",
-    body: "Round 2 is cumulative: it includes every allotment in Round 1. Round 3 includes Rounds 1 and 2. The final close must equal the Round 3 cumulative close.",
+    body: "Round 2 is cumulative: it includes every allotment in Round 1. Round 3 includes Rounds 1 and 2. The R3 cumulative close is the last-ranked allotment in the union of Rounds 1–3.",
   },
   {
     title: "Missing values",
@@ -48,6 +55,47 @@ const RULES = [
     body: "Closing ranks are stored for 2025 and 2026 only. The archived 2024 rank export is an exact duplicate of 2025, so it is not reused.",
   },
 ];
+
+const YEAR_PROVENANCE: Record<
+  number,
+  { grouping: string; rank: string; source: string }
+> = {
+  2020: {
+    grouping: "Candidate community",
+    rank: "Not published here",
+    source: "Archived TNEA all-years export",
+  },
+  2021: {
+    grouping: "Candidate community",
+    rank: "Not published here",
+    source: "Archived TNEA all-years export",
+  },
+  2022: {
+    grouping: "Candidate community",
+    rank: "Not published here",
+    source: "Archived TNEA all-years export",
+  },
+  2023: {
+    grouping: "Candidate community",
+    rank: "Not published here",
+    source: "Archived TNEA all-years export",
+  },
+  2024: {
+    grouping: "Candidate community",
+    rank: "Duplicate of 2025, not used",
+    source: "Archived TNEA all-years export",
+  },
+  2025: {
+    grouping: "Candidate community",
+    rank: "Published",
+    source: "Archived TNEA export",
+  },
+  2026: {
+    grouping: "Community the seat was allotted against",
+    rank: "Published, with source round and page",
+    source: "Official TNEA 2026 allotment PDFs, seat matrix and vacancy statement",
+  },
+};
 
 export default async function AboutPage() {
   const [documents, stats] = await Promise.all([
@@ -82,6 +130,75 @@ export default async function AboutPage() {
               <p className="text-[11px] text-muted-foreground">{label}</p>
             </Card>
           ))}
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-start justify-between gap-3 rounded-xl border border-primary/20 bg-accent/30 px-4 py-3">
+          <div className="min-w-0">
+            <p className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-foreground">
+              Dataset version
+              <Badge variant="mono">{seedManifest.generatedAt}</Badge>
+            </p>
+            <p className="mt-1 max-w-2xl text-[11.5px] leading-relaxed text-muted-foreground">
+              {seedManifest.source}
+            </p>
+          </div>
+          <a
+            href={reportIssueUrl({ kind: "data" })}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-[12px] font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+          >
+            <FileWarning className="size-3.5 text-warning" />
+            Report an error
+            <ArrowRight className="size-3.5" />
+          </a>
+        </div>
+
+        <div id="coverage" className="mt-10 scroll-mt-24">
+          <h2 className="display text-2xl sm:text-3xl">Published year coverage</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            Each year is a separate published record with its own grouping rule.
+            A year with no published rank is not converted into one.
+          </p>
+          <Card className="mt-5 overflow-hidden">
+            <div className="overflow-x-auto" tabIndex={0} aria-label="Scrollable table">
+              <table className="mobile-sticky-first w-full min-w-[44rem] text-left text-[12px]">
+                <thead className="border-b border-border bg-surface/60 text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
+                  <tr>
+                    <th className="px-4 py-2.5 font-medium">Year</th>
+                    <th className="px-4 py-2.5 text-right font-medium">Rows</th>
+                    <th className="px-4 py-2.5 font-medium">Community grouping</th>
+                    <th className="px-4 py-2.5 font-medium">Closing rank</th>
+                    <th className="px-4 py-2.5 font-medium">Source</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {stats.cutoffYears.map((entry) => {
+                    const provenance = YEAR_PROVENANCE[entry.year];
+                    return (
+                      <tr key={entry.year} className="hover:bg-muted/25">
+                        <td className="px-4 py-3 font-mono font-semibold">
+                          {entry.year}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono">
+                          {formatNumber(entry.count)}
+                        </td>
+                        <td className="px-4 py-3 text-foreground/80">
+                          {provenance?.grouping ?? "Not documented"}
+                        </td>
+                        <td className="px-4 py-3 text-foreground/80">
+                          {provenance?.rank ?? "Not documented"}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {provenance?.source ?? "Not documented"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Card>
         </div>
 
         <div id="method" className="mt-10 scroll-mt-24">
@@ -139,7 +256,7 @@ export default async function AboutPage() {
                       {document.authority} · {document.pageCount} PDF pages ·
                       retrieved {document.retrievedAt}
                     </p>
-                    <p className="mt-2 break-all font-mono text-[10px] leading-relaxed text-muted-foreground/80">
+                    <p className="mt-2 break-all font-mono text-[10px] leading-relaxed text-muted-foreground">
                       SHA-256 {document.sha256}
                     </p>
                   </div>
@@ -231,6 +348,30 @@ export default async function AboutPage() {
                 .
               </p>
             </div>
+          </Card>
+        </div>
+
+        <div id="corrections" className="mt-12 scroll-mt-24">
+          <Card className="border-warning/25 bg-warning/5 p-6">
+            <h2 className="flex items-center gap-2 text-sm font-semibold">
+              <FileWarning className="size-4 text-warning" />
+              Found a mismatch?
+            </h2>
+            <p className="mt-2 max-w-2xl text-[12px] leading-relaxed text-foreground/80">
+              Corrections are handled in the public issue tracker so the change
+              and its evidence stay visible. Include the college code, branch,
+              year, community, the value shown and the official PDF page that
+              supports the correction. Do not include private tracker data.
+            </p>
+            <a
+              href={reportIssueUrl({ kind: "data" })}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-[12px] font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+            >
+              Open a correction issue
+              <ArrowRight className="size-3.5" />
+            </a>
           </Card>
         </div>
       </section>

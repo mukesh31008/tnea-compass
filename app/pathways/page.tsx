@@ -163,7 +163,7 @@ export default function PathwaysPage() {
             </p>
             <div className="mt-4 grid gap-2">
               {[
-                ["/cutoffs?year=2026", "2026 final closes"],
+                ["/cutoffs?year=2026", "2026 R3 cumulative closes"],
                 ["/predictor?year=2026", "Read your position"],
                 ["/colleges", "College records"],
                 ["/about#data", "Source documents"],

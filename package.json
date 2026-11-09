@@ -9,10 +9,14 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed.ts",
-    "data:etl": "python3 scripts/etl.py"
+    "data:etl": "python3 scripts/etl.py",
+    "data:check": "tsx scripts/check-sources.ts",
+    "data:backup": "bash scripts/backup-turso.sh"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.85",
@@ -51,7 +55,9 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.65.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

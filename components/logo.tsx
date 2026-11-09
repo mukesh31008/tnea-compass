@@ -12,7 +12,6 @@ export function Logo({
   return (
     <Link
       href="/"
-      aria-label="TNEA Compass home"
       className={cn("group inline-flex items-center gap-2.5", className)}
     >
       <span className="relative grid size-8 place-items-center rounded-[10px] bg-primary text-primary-foreground shadow-xs transition-transform duration-200 group-hover:-rotate-6">
@@ -21,11 +20,14 @@ export function Logo({
       {showWordmark && (
         <span className="flex items-baseline gap-1.5">
           <span className="text-[15px] font-semibold tracking-tight">TNEA</span>
-          <span className="text-[15px] font-medium tracking-tight text-muted-foreground">
+          <span className="text-[15px] font-medium tracking-tight text-foreground/70">
             Compass
           </span>
         </span>
       )}
+      <span className="sr-only">
+        {showWordmark ? " home" : "TNEA Compass home"}
+      </span>
     </Link>
   );
 }

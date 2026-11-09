@@ -3,10 +3,10 @@ import "server-only";
 /**
  * Small fixed-window limiter for the public assistant endpoint.
  *
- * It is intentionally process-local: the assistant is a read-only public
- * endpoint, and a single Node process is the deployment target. If the app is
- * ever scaled horizontally, move this to a shared store rather than trusting
- * per-instance counters.
+ * The in-memory limiter is the fallback. When UPSTASH_REDIS_REST_URL and
+ * UPSTASH_REDIS_REST_TOKEN are set, the counter lives in a shared Redis so
+ * multiple serverless instances see the same window. No package is required;
+ * it uses the Upstash REST API.
  */
 
 type Bucket = {
@@ -34,7 +34,7 @@ export type RateLimitResult = {
   limit: number;
 };
 
-export function rateLimit(key: string): RateLimitResult {
+function localRateLimit(key: string): RateLimitResult {
   const now = Date.now();
   sweep(now);
 
@@ -57,6 +57,47 @@ export function rateLimit(key: string): RateLimitResult {
     resetAt: existing.resetAt,
     limit: MAX_REQUESTS,
   };
+}
+
+async function upstashCommand(command: (string | number)[]): Promise<unknown> {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) throw new Error("Upstash is not configured");
+
+  const response = await fetch(url.replace(/\/+$/, ""), {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(command),
+    signal: AbortSignal.timeout(2_000),
+  });
+  if (!response.ok) throw new Error(`Upstash HTTP ${response.status}`);
+  const payload = (await response.json()) as { result?: unknown };
+  return payload.result;
+}
+
+export async function rateLimit(key: string): Promise<RateLimitResult> {
+  if (!process.env.UPSTASH_REDIS_REST_URL) return localRateLimit(key);
+
+  const redisKey = `tnea:assistant:${key}`;
+  try {
+    const count = Number(await upstashCommand(["INCR", redisKey]));
+    if (count === 1) {
+      await upstashCommand(["EXPIRE", redisKey, Math.ceil(WINDOW_MS / 1000)]);
+    }
+    const ttl = Number(await upstashCommand(["TTL", redisKey]));
+    return {
+      allowed: count <= MAX_REQUESTS,
+      remaining: Math.max(0, MAX_REQUESTS - count),
+      resetAt: Date.now() + Math.max(1, Number.isFinite(ttl) ? ttl : 60) * 1000,
+      limit: MAX_REQUESTS,
+    };
+  } catch (error) {
+    console.warn("Shared rate limiter unavailable, using local fallback:", error);
+    return localRateLimit(key);
+  }
 }
 
 /** Best-effort client address. Proxies must be trusted before this is relied on. */

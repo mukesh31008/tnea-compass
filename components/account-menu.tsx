@@ -34,7 +34,7 @@ export function AccountMenu() {
   if (!data?.user) {
     return (
       <Link href="/sign-in" className="hidden sm:block">
-        <Button variant="ghost" size="sm" className="text-muted-foreground">
+        <Button variant="ghost" size="sm">
           Sign in
         </Button>
       </Link>

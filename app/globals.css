@@ -220,6 +220,23 @@
   color: transparent;
 }
 
+/* Keep the row label visible while a wide record table scrolls sideways. */
+@utility mobile-sticky-first {
+  @media (max-width: 640px) {
+    th:first-child,
+    td:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      background: var(--card);
+      box-shadow: 1px 0 0 var(--border);
+    }
+    thead th:first-child {
+      background: var(--surface);
+    }
+  }
+}
+
 @keyframes rise {
   from {
     opacity: 0;
@@ -249,16 +266,34 @@
   animation: fade 0.5s ease-out both;
 }
 
+/*
+ * Content is visible by default. The `js` class is added before paint by the
+ * root layout, so the hidden state only applies when the observer can reveal
+ * it. A strict CSP or a script failure therefore cannot blank the page.
+ */
 .reveal {
+  opacity: 1;
+  transform: none;
+}
+
+.js .reveal {
   opacity: 0;
   transform: translateY(16px);
   transition: opacity 600ms cubic-bezier(0.16, 1, 0.3, 1),
     transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.reveal.is-visible {
+.js .reveal.is-visible {
   opacity: 1;
   transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
 @media print {

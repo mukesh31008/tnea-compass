@@ -6,12 +6,15 @@ import { AssistantAnswer } from "@/components/assistant-answer";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getBranchOptions, getCollegeOptions } from "@/lib/db/queries";
 
 export const metadata: Metadata = {
   title: "Ask the record",
   description:
     "Ask a question about published TNEA cutoff marks, closing ranks, round timelines, seats and vacancies. Every answer is cited to an official source document.",
 };
+
+export const dynamic = "force-dynamic";
 
 const PRINCIPLES = [
   {
@@ -31,7 +34,20 @@ const PRINCIPLES = [
   },
 ];
 
-export default function AssistantPage() {
+export default async function AssistantPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const rawQuestion = Array.isArray(params.q) ? params.q[0] : params.q;
+  const initialQuestion = rawQuestion?.slice(0, 500).trim() ?? "";
+
+  const [colleges, branches] = await Promise.all([
+    getCollegeOptions().catch(() => []),
+    getBranchOptions().catch(() => []),
+  ]);
+
   return (
     <>
       <PageHeader
@@ -55,7 +71,11 @@ export default function AssistantPage() {
       />
 
       <section className="container-page py-8 md:py-10">
-        <AssistantAnswer />
+        <AssistantAnswer
+          initialQuestion={initialQuestion}
+          colleges={colleges}
+          branches={branches}
+        />
       </section>
 
       <section className="container-page pb-4">
