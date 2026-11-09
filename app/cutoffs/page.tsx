@@ -18,6 +18,7 @@ import { Card } from "@/components/ui/card";
 import {
   getBranchOptions,
   getCutoffExplorer,
+  getDatasetStats,
   getDistrictOptions,
 } from "@/lib/db/queries";
 import {
@@ -26,7 +27,7 @@ import {
   isCommunity,
   type Community,
 } from "@/lib/tnea";
-import { formatCutoff, formatNumber } from "@/lib/utils";
+import { cn, formatCutoff, formatNumber } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Cutoff trends",
@@ -40,6 +41,16 @@ type SearchParams = Record<string, string | string[] | undefined>;
 
 function first(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
+}
+
+function buildYearHref(params: SearchParams, year: number): string {
+  const next = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    const item = first(value);
+    if (item && key !== "page" && key !== "year") next.set(key, item);
+  }
+  next.set("year", String(year));
+  return `/cutoffs?${next.toString()}`;
 }
 
 function buildHref(params: SearchParams, page: number): string {
@@ -78,9 +89,10 @@ export default async function CutoffsPage({
   const pageParam = Number(first(params.page) ?? "1");
   const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
 
-  const [districts, branches, results] = await Promise.all([
+  const [districts, branches, stats, results] = await Promise.all([
     getDistrictOptions(),
     getBranchOptions(),
+    getDatasetStats(),
     getCutoffExplorer({
       year,
       community,
@@ -100,6 +112,10 @@ export default async function CutoffsPage({
   const branchName = branch
     ? branches.find((item) => item.code === branch)?.name
     : "All branches";
+
+  const rowsByYear = new Map(
+    stats.cutoffYears.map((entry) => [entry.year, entry.count]),
+  );
 
   const limit = 25;
   const offset = (results.page - 1) * limit;
@@ -128,6 +144,53 @@ export default async function CutoffsPage({
           district={district ?? null}
           query={q ?? null}
         />
+
+        <Card className="mt-3 p-3 md:p-4">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <p className="text-[12px] font-semibold text-foreground">
+              Published cutoff coverage
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              2020–2024 marks · 2025–2026 marks and closing ranks
+            </p>
+          </div>
+          <div className="mt-2.5 grid grid-cols-4 gap-1.5 sm:grid-cols-7">
+            {CUTOFF_YEARS.map((value) => {
+              const active = value === year;
+              const count = rowsByYear.get(value) ?? 0;
+              return (
+                <Link
+                  key={value}
+                  href={buildYearHref(params, value)}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "rounded-lg border px-2.5 py-2 transition-colors",
+                    active
+                      ? "border-primary/30 bg-primary/10 text-primary"
+                      : "border-border bg-background text-foreground/80 hover:border-primary/25 hover:bg-accent/40",
+                  )}
+                >
+                  <span className="block font-mono text-[13px] font-semibold">
+                    {value}
+                  </span>
+                  <span
+                    className={cn(
+                      "mt-0.5 block text-[10px]",
+                      active ? "text-primary/75" : "text-muted-foreground",
+                    )}
+                  >
+                    {formatNumber(count)} rows
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-[10.5px] leading-relaxed text-muted-foreground">
+            Each year is a separate published record. 2020–2025 group by the
+            candidate&apos;s community; 2026 groups by the community the seat was
+            allotted against.
+          </p>
+        </Card>
 
         <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-4">
           {[
