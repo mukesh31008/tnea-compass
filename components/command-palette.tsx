@@ -15,6 +15,9 @@ import {
   Search,
   Sparkles,
   Calculator,
+  PlayCircle,
+  GraduationCap,
+  Calendar,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -31,6 +34,9 @@ const QUICK_LINKS = [
   { label: "College explorer", href: "/colleges", icon: Building2, hint: "478 institutions" },
   { label: "Cutoff trends", href: "/cutoffs", icon: BarChart3, hint: "2020 – 2026" },
   { label: "Where you stand", href: "/predictor", icon: Sparkles, hint: "By rank or mark" },
+  { label: "Counselling simulator", href: "/simulator", icon: PlayCircle, hint: "Step through rounds" },
+  { label: "Resource hub & prep", href: "/resources", icon: GraduationCap, hint: "Calculator & checklist" },
+  { label: "Counselling calendar", href: "/calendar", icon: Calendar, hint: "Key dates & alerts" },
   { label: "Cutoff check", href: "/predictor?mode=cutoff", icon: Calculator, hint: "Compare marks" },
   { label: "Compare colleges", href: "/compare", icon: GitCompareArrows, hint: "Up to 4" },
   { label: "Choice list", href: "/choices", icon: ListChecks, hint: "Build and export" },

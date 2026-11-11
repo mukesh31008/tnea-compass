@@ -13,12 +13,15 @@ const COLUMNS = [
       { label: "Cutoff trends", href: "/cutoffs" },
       { label: "Where you stand", href: "/predictor" },
       { label: "Compare colleges", href: "/compare" },
+      { label: "Counselling simulator", href: "/simulator" },
+      { label: "Counselling calendar", href: "/calendar" },
     ],
   },
   {
     title: "Build",
     links: [
       { label: "Choice list", href: "/choices" },
+      { label: "Resource hub & prep", href: "/resources" },
       { label: "Dashboard", href: "/dashboard" },
       { label: "Academic tracker", href: "/tracker/academic" },
     ],
@@ -30,8 +33,8 @@ const COLUMNS = [
       { label: "Year coverage", href: "/about#coverage" },
       { label: "Methodology", href: "/about#method" },
       { label: "Data provenance", href: "/about#data" },
-      { label: "Privacy", href: "/about#privacy" },
-      { label: "Disclaimer", href: "/about#disclaimer" },
+      { label: "Privacy policy (DPDP)", href: "/privacy" },
+      { label: "Terms of service", href: "/terms" },
     ],
   },
 ];

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { ComparePicker } from "@/components/compare-picker";
+import { CompareShareButton } from "@/components/compare-share-button";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -378,13 +379,19 @@ export default async function ComparePage({
         ) : (
           <>
             <Card className="mt-6 overflow-hidden">
-              <div className="border-b border-border px-5 py-4">
-                <h2 className="text-sm font-semibold">At a glance</h2>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">
-                  Seat totals are the published 2026 matrix. Vacancies are the
-                  post-Round-3 statement. A dash or “Not reported” is a missing
-                  record, never a zero.
-                </p>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+                <div>
+                  <h2 className="text-sm font-semibold">At a glance</h2>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    Seat totals are the published 2026 matrix. Vacancies are the
+                    post-Round-3 statement. A dash or “Not reported” is a missing
+                    record, never a zero.
+                  </p>
+                </div>
+                <CompareShareButton
+                  codes={profiles.map((p) => p.college.code)}
+                  names={profiles.map((p) => p.college.shortName ?? p.college.name)}
+                />
               </div>
               <div className="overflow-x-auto" tabIndex={0} aria-label="Scrollable table">
                 <table className="w-full min-w-[46rem] text-left text-[12px]">

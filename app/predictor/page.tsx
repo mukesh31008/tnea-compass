@@ -12,6 +12,7 @@ import {
 
 import { PageHeader } from "@/components/page-header";
 import { PredictorForm } from "@/components/predictor-form";
+import { RankDistanceGauge } from "@/components/rank-distance-gauge";
 import { AddToChoice } from "@/components/add-to-choice";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -409,11 +410,18 @@ export default async function PredictorPage({
                             )}
                           </td>
                           <td className="px-4 py-3 text-right">
-                            <span title={row.prediction.note}>
-                              <Badge variant={BAND_META[row.prediction.band].tone}>
-                                {row.prediction.label}
-                              </Badge>
-                            </span>
+                            <div className="flex items-center justify-end gap-2">
+                              <RankDistanceGauge
+                                band={row.prediction.band}
+                                advantage={row.prediction.advantage}
+                                mode={activeMode}
+                              />
+                              <span title={row.prediction.note}>
+                                <Badge variant={BAND_META[row.prediction.band].tone}>
+                                  {row.prediction.label}
+                                </Badge>
+                              </span>
+                            </div>
                           </td>
                           <td className="px-4 py-3 text-right">
                             <AddToChoice

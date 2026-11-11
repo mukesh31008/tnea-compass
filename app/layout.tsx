@@ -8,6 +8,7 @@ import { CommandPalette } from "@/components/command-palette";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ChoicesProvider } from "@/components/choices-provider";
+import { DpdpConsentBanner } from "@/components/dpdp-consent-banner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -81,6 +82,17 @@ export default function RootLayout({
             __html: "document.documentElement.classList.add('js')",
           }}
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').catch(function() {});
+                });
+              }
+            `,
+          }}
+        />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -103,6 +115,7 @@ export default function RootLayout({
                 <SiteFooter />
               </div>
               <CommandPalette />
+              <DpdpConsentBanner />
               <Toaster position="top-center" richColors closeButton />
             </ChoicesProvider>
           </TooltipProvider>

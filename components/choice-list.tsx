@@ -30,6 +30,9 @@ import {
   Printer,
   Search,
   Trash2,
+  Share2,
+  PlayCircle,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -96,6 +99,18 @@ function downloadCsv(choices: ChoiceRecord[]) {
   link.click();
   link.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function shareOnWhatsApp(choices: ChoiceRecord[]) {
+  const topFive = choices
+    .slice(0, 5)
+    .map((c, i) => `${i + 1}. [${c.collegeCode}] ${c.branchCode} - ${c.collegeName}`)
+    .join("\n");
+  const more = choices.length > 5 ? `\n...and ${choices.length - 5} more choices.` : "";
+  const text = encodeURIComponent(
+    `📋 My TNEA Counselling Choice List (${choices.length} choices):\n\n${topFive}${more}\n\nDrafted with TNEA Compass (https://tneacompass.in)`,
+  );
+  window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
 }
 
 function SortableChoice({
@@ -381,6 +396,22 @@ export function ChoiceList() {
 
           <div className="flex flex-wrap gap-2 print:hidden">
             <ChoiceSync />
+            <Button asChild variant="outline" size="sm" className="gap-1.5">
+              <Link href="/simulator">
+                <PlayCircle className="size-3.5 text-primary" />
+                Simulate
+              </Link>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700"
+              onClick={() => shareOnWhatsApp(choices)}
+            >
+              <Share2 className="size-3.5" />
+              WhatsApp
+            </Button>
             <Button
               type="button"
               variant="outline"
@@ -439,6 +470,21 @@ export function ChoiceList() {
             its context.
           </p>
         )}
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3.5 py-2.5 text-xs print:hidden">
+          <div className="flex items-center gap-2">
+            <Sparkles className="size-4 text-primary shrink-0" />
+            <span className="text-foreground">
+              {choices.length < 10
+                ? "Tip: TNEA allows unlimited choices. Students who list 15+ choices with safe backups rarely go un-allotted."
+                : "Strong list depth. Test your priority order against multi-round cutoffs to avoid losing dream seats."}
+            </span>
+          </div>
+          <Button asChild variant="ghost" size="sm" className="h-7 text-xs font-semibold text-primary hover:text-primary">
+            <Link href="/simulator">
+              Run Round Simulation <ArrowRight className="ml-1 size-3" />
+            </Link>
+          </Button>
+        </div>
       </Card>
 
       <DndContext

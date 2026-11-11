@@ -1,0 +1,147 @@
+openapi: 3.1.0
+info:
+  title: TNEA Compass API
+  version: 1.2.0
+  description: >
+    Official REST API specification for TNEA Compass. Provides endpoints for
+    querying college cutoff records, deterministic cited assistant answers,
+    choice list synchronization, account portability under the DPDP Act, and system health.
+servers:
+  - url: https://tneacompass.in
+    description: Production Server
+  - url: http://localhost:3000
+    description: Local Development Server
+
+paths:
+  /api/health:
+    get:
+      summary: Health check & DB connectivity probe
+      description: Returns operational health of the database connection and version metadata.
+      responses:
+        '200':
+          description: Service is healthy.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  uptime:
+                    type: number
+                  database:
+                    type: string
+                    example: connected
+
+  /api/colleges/search:
+    get:
+      summary: Fast college lookup
+      description: Autocomplete endpoint returning colleges matching an alphanumeric prefix or query.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search term or 4-digit college code
+          schema:
+            type: string
+            example: '0001'
+      responses:
+        '200':
+          description: List of matching colleges.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      example: '0001'
+                    name:
+                      type: string
+                      example: 'College of Engineering Guindy'
+                    shortName:
+                      type: string
+                      example: 'CEG'
+                    district:
+                      type: string
+                      example: 'Chennai'
+
+  /api/assistant:
+    post:
+      summary: Grounded Cited Answer Engine
+      description: Deterministic question-answering tool citing official TNEA documents without hallucination.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - question
+              properties:
+                question:
+                  type: string
+                  example: 'What was the 2026 OC cutoff for CEG Computer Science?'
+      responses:
+        '200':
+          description: Grounded answer with source citations.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  answer:
+                    type: string
+                  citations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        title:
+                          type: string
+                        url:
+                          type: string
+        '429':
+          description: Rate limit exceeded.
+
+  /api/choices:
+    get:
+      summary: Fetch saved choices
+      description: Retrieves the authenticated user's cloud-synced counselling choices.
+      responses:
+        '200':
+          description: Choice list array.
+        '401':
+          description: Unauthorized.
+    post:
+      summary: Sync choices
+      description: Updates the authenticated user's choices list.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                choices:
+                  type: array
+                  items:
+                    type: object
+      responses:
+        '200':
+          description: Synced successfully.
+
+  /api/account/export:
+    get:
+      summary: DPDP Act Data Portability Export
+      description: Exports complete JSON archive of all personal data, marks, applications, and sessions.
+      responses:
+        '200':
+          description: Machine-readable JSON data export.
+          content:
+            application/json:
+              schema:
+                type: object
